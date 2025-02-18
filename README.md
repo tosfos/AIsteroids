@@ -4,6 +4,23 @@ A multi-threaded, object-oriented arcade space shooter built entirely in Java. T
 
 ## Features
 
+- **Procedurally Generated Sound Effects:**
+  - Laser sounds for bullet firing
+  - Explosion sounds when asteroids are destroyed
+  - Thruster sounds during acceleration
+  - All sounds are synthesized in real-time using Java's audio system
+
+- **Scoring System:**
+  - Points awarded for destroying asteroids
+  - Larger asteroids worth more points
+  - Score displayed during gameplay
+
+- **Game Over System:**
+  - Lives system with visual counter
+  - Invulnerability period after taking damage
+  - Game over screen with final score
+  - Press 'N' to start a new game
+
 - **Multi-threaded Game Loop:**  
   The game logic runs on its own dedicated thread (in `GameEngine.java`), ensuring smooth physics updates and collision detection at roughly 60 FPS.
 
@@ -32,6 +49,9 @@ A multi-threaded, object-oriented arcade space shooter built entirely in Java. T
   Synchronization is applied to shared resources (such as the game objects list) to ensure safe access from multiple threads.
 
 ## Project Structure
+
+- **SoundManager.java**
+  Handles real-time sound synthesis and playback using Java's audio system. Generates retro-style sound effects for all game events.
 
 - **Main.java**  
   The entry point of the application. It creates the game window using Swing, initializes the game engine, and starts the game loop.
@@ -81,6 +101,7 @@ Alternatively, you can import the project into your IDE and run the `Main` class
 - **Right Arrow:** Rotate the player's ship clockwise.
 - **Up Arrow:** Accelerate the player's ship in the current facing direction.
 - **Space Bar:** Fire a bullet from the ship's tip.
+- **N:** Start a new game (when game over)
 
 ## Technical Overview
 
@@ -92,6 +113,7 @@ Alternatively, you can import the project into your IDE and run the `Main` class
 - **Multi-threading:**  
   - The **GameEngine** runs the main update loop on a separate thread to keep game simulation smooth.  
   - **Asteroid Spawning:** A separate thread periodically spawns new asteroids.  
+  - **Sound Playback:** Sound effects are handled on a separate thread pool.
   - **Event Dispatch Thread (EDT):** Swing handles rendering and user input, which is coordinated with the game engine threads using synchronized blocks.
 
 ## Future Enhancements
@@ -110,7 +132,7 @@ Alternatively, you can import the project into your IDE and run the `Main` class
 
 ## License
 
-This project is provided as-is for educational purposes. Feel free to modify, extend, and use it as a learning tool.
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Acknowledgments
 
