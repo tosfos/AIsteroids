@@ -1,5 +1,9 @@
 # AIsteroids
 
+<p align="center">
+  <img src="art.png" alt="AIsteroids Game Art" width="600"/>
+</p>
+
 A multi-threaded, object-oriented arcade space shooter built entirely in Java. This project demonstrates expert-level design, utilizing multiple threads, advanced collision detection, and Swing for rendering and input management. The game features a dynamically updating game loop, multi-threaded asteroid spawning, and smooth, responsive controls.
 
 ## Features
