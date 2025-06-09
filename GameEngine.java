@@ -35,7 +35,7 @@ public class GameEngine implements Runnable {
           addGameObject(Asteroid.createRandomAsteroid(WIDTH, HEIGHT, 3)); // size 3 represents a large asteroid.
        }
 
-       // Start a separate thread to periodically spawn new asteroids.
+       // Start a separate thread to periodically spawn new asteroids and power-ups.
        new Thread(() -> {
          while (true) {
            try {
@@ -45,6 +45,11 @@ public class GameEngine implements Runnable {
              break;
            }
            addGameObject(Asteroid.createRandomAsteroid(WIDTH, HEIGHT, 3));
+
+           // 20% chance to spawn a power-up
+           if (Math.random() < 0.2) {
+             addGameObject(PowerUp.createRandomPowerUp(WIDTH, HEIGHT));
+           }
          }
        }, "AsteroidSpawner").start();
     }
@@ -134,9 +139,23 @@ public class GameEngine implements Runnable {
          }
          // Player ship colliding with an asteroid.
          else if (a instanceof PlayerShip && b instanceof Asteroid) {
-            ((PlayerShip)a).damage();
+            PlayerShip ship = (PlayerShip)a;
+            if (!ship.hasShield()) {
+                ship.damage();
+            }
          } else if (b instanceof PlayerShip && a instanceof Asteroid) {
-            ((PlayerShip)b).damage();
+            PlayerShip ship = (PlayerShip)b;
+            if (!ship.hasShield()) {
+                ship.damage();
+            }
+         }
+         // Player ship colliding with power-up.
+         else if (a instanceof PlayerShip && b instanceof PowerUp) {
+            ((PlayerShip)a).addPowerUp(((PowerUp)b).getType());
+            ((PowerUp)b).setAlive(false);
+         } else if (b instanceof PlayerShip && a instanceof PowerUp) {
+            ((PlayerShip)b).addPowerUp(((PowerUp)a).getType());
+            ((PowerUp)a).setAlive(false);
          }
     }
 
