@@ -254,6 +254,8 @@ public class PlayerShip extends GameObject {
             vy = 0;
             // Set invulnerability period (2 seconds) to prevent immediate further damage
             invulnerabilityTimer = 2.0;
+            // Play shield recharge sound when respawning
+            SoundManager.playShieldRecharge();
         }
     }
 
