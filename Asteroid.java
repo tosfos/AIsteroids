@@ -9,9 +9,11 @@ public class Asteroid extends GameObject {
     private double rotationSpeed;  // rotation speed in radians per second.
     private double radius;      // visual radius (based on size).
     private Shape shape;
-    
+    private Color baseColor;
+    private Color[] textureColors;
+
     private static final Random rand = new Random();
-    
+
     public Asteroid(double x, double y, int size, double vx, double vy) {
        super(x, y);
        this.size = size;
@@ -19,8 +21,11 @@ public class Asteroid extends GameObject {
        this.vy = vy;
        this.radius = size * 15;
        this.rotation = 0;
-       this.rotationSpeed = (rand.nextDouble() - 0.5) * 2;  // Random rotation speed between -1 and 1 rad/s.
-       
+       this.rotationSpeed = (rand.nextDouble() - 0.5) * 0.5;  // Slower rotation speed between -0.25 and 0.25 rad/s.
+
+       // Generate random asteroid colors for variety
+       generateAsteroidColors();
+
        // Create an irregular polygon for the asteroid shape
        int numPoints = 8 + rand.nextInt(5); // between 8 and 12 vertices
        double angleStep = 2 * Math.PI / numPoints;
@@ -40,50 +45,111 @@ public class Asteroid extends GameObject {
        path.closePath();
        this.shape = path;
     }
-    
+
+    private void generateAsteroidColors() {
+        // Generate varied asteroid colors (browns, grays, with some color variation)
+        int baseGray = 60 + rand.nextInt(80); // 60-140
+        int redTint = baseGray + rand.nextInt(30);
+        int greenTint = baseGray + rand.nextInt(20);
+        int blueTint = baseGray - rand.nextInt(15);
+
+        baseColor = new Color(
+            Math.min(255, redTint),
+            Math.min(255, greenTint),
+            Math.max(0, blueTint)
+        );
+
+        // Create texture color variations
+        textureColors = new Color[4];
+        for (int i = 0; i < 4; i++) {
+            int variation = rand.nextInt(40) - 20;
+            textureColors[i] = new Color(
+                Math.max(0, Math.min(255, baseColor.getRed() + variation)),
+                Math.max(0, Math.min(255, baseColor.getGreen() + variation)),
+                Math.max(0, Math.min(255, baseColor.getBlue() + variation))
+            );
+        }
+    }
+
     @Override
     public void update(double deltaTime) {
        x += vx * deltaTime;
        y += vy * deltaTime;
        rotation += rotationSpeed * deltaTime;
     }
-    
+
     @Override
     public void draw(Graphics2D g) {
        AffineTransform old = g.getTransform();
        g.translate(x, y);
        g.rotate(rotation);
-       
-       // Use a gradient to fill the asteroid shape for extra depth
-       GradientPaint asteroidPaint = new GradientPaint((float)-radius, (float)-radius, Color.lightGray, (float)radius, (float)radius, Color.darkGray, true);
+
+       // Create advanced lighting effect
+       float lightX = (float)(-radius * 0.3);
+       float lightY = (float)(-radius * 0.3);
+       float darkX = (float)(radius * 0.5);
+       float darkY = (float)(radius * 0.5);
+
+       // Main asteroid body with radial gradient
+       Color lightColor = new Color(
+           Math.min(255, baseColor.getRed() + 60),
+           Math.min(255, baseColor.getGreen() + 60),
+           Math.min(255, baseColor.getBlue() + 60)
+       );
+       Color darkColor = new Color(
+           Math.max(0, baseColor.getRed() - 40),
+           Math.max(0, baseColor.getGreen() - 40),
+           Math.max(0, baseColor.getBlue() - 40)
+       );
+
+       float[] dist = {0.0f, 0.7f, 1.0f};
+       Color[] colors = {lightColor, baseColor, darkColor};
+       RadialGradientPaint asteroidPaint = new RadialGradientPaint(
+           lightX, lightY, (float)radius * 1.2f, dist, colors);
+
        Paint oldPaint = g.getPaint();
        g.setPaint(asteroidPaint);
        g.fill(shape);
-       
-       // Draw the asteroid outline
-       g.setPaint(Color.black);
-       g.setStroke(new BasicStroke(2));
-       g.draw(shape);
-       
-       g.setPaint(oldPaint);
-       g.setTransform(old);
+
+               // Draw the asteroid outline with subtle glow
+        g.setPaint(new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), 100));
+        g.setStroke(new BasicStroke(3f));
+        g.draw(shape);
+
+        g.setPaint(new Color(lightColor.getRed(), lightColor.getGreen(), lightColor.getBlue(), 150));
+        g.setStroke(new BasicStroke(1.5f));
+        g.draw(shape);
+
+                g.setPaint(oldPaint);
+        g.setTransform(old);
     }
-    
+
     @Override
     public Rectangle getBounds() {
        return new Rectangle((int)(x - radius), (int)(y - radius), (int)(radius * 2), (int)(radius * 2));
     }
-    
+
     // Called when the asteroid is hit by a bullet.
     public void hit(GameEngine engine) {
        SoundManager.playExplosion();
+
+       // Trigger particle explosion effect
+       triggerExplosionEffect(engine);
+
        if (size > 1) {
           double speed = Math.hypot(vx, vy);
           double baseAngle = Math.atan2(vy, vx);
-          double angle1 = baseAngle + Math.toRadians(20);
-          double angle2 = baseAngle - Math.toRadians(20);
-          engine.addGameObject(new Asteroid(x, y, size - 1, speed * Math.cos(angle1), speed * Math.sin(angle1)));
-          engine.addGameObject(new Asteroid(x, y, size - 1, speed * Math.cos(angle2), speed * Math.sin(angle2)));
+          double angle1 = baseAngle + Math.toRadians(30 + rand.nextInt(30));
+          double angle2 = baseAngle - Math.toRadians(30 + rand.nextInt(30));
+
+          double newSpeed1 = speed * (0.8 + rand.nextDouble() * 0.4);
+          double newSpeed2 = speed * (0.8 + rand.nextDouble() * 0.4);
+
+          engine.addGameObject(new Asteroid(x, y, size - 1,
+              newSpeed1 * Math.cos(angle1), newSpeed1 * Math.sin(angle1)));
+          engine.addGameObject(new Asteroid(x, y, size - 1,
+              newSpeed2 * Math.cos(angle2), newSpeed2 * Math.sin(angle2)));
+
           // Award points based on asteroid size
           engine.addScore(size * 100);
        } else {
@@ -93,15 +159,30 @@ public class Asteroid extends GameObject {
        // Mark this asteroid as destroyed.
        alive = false;
     }
-    
+
+    private void triggerExplosionEffect(GameEngine engine) {
+        // This method would be called to create explosion particles
+        // For now, we'll leave it as a placeholder since we need to
+        // coordinate with the GamePanel's particle system
+    }
+
     // Factory method to create a random asteroid.
     public static Asteroid createRandomAsteroid(int screenWidth, int screenHeight, int size) {
-       double x = rand.nextDouble() * screenWidth;
-       double y = rand.nextDouble() * screenHeight;
+       double x, y;
+
+       // Spawn asteroids from screen edges
+       if (rand.nextBoolean()) {
+           x = rand.nextBoolean() ? -50 : screenWidth + 50;
+           y = rand.nextDouble() * screenHeight;
+       } else {
+           x = rand.nextDouble() * screenWidth;
+           y = rand.nextBoolean() ? -50 : screenHeight + 50;
+       }
+
        double angle = rand.nextDouble() * 2 * Math.PI;
-       double speed = 50 + rand.nextDouble() * 50;
+       double speed = 30 + rand.nextDouble() * 70; // Varied speed
        double vx = speed * Math.cos(angle);
        double vy = speed * Math.sin(angle);
        return new Asteroid(x, y, size, vx, vy);
     }
-} 
+}

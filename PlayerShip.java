@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlayerShip extends GameObject {
     // Ship orientation in radians (initially pointing up: -PI/2)
@@ -13,23 +15,26 @@ public class PlayerShip extends GameObject {
     private int lives = 3;
     // Invulnerability timer in seconds after being hit.
     private double invulnerabilityTimer = 0;
-    
+    // Engine trail particles
+    private List<TrailParticle> engineTrail;
+
     // Constants for rotation and acceleration.
     private final double rotationSpeed = Math.toRadians(180); // 180° per second.
     private final double acceleration = 200; // pixels per second^2.
     private final double maxSpeed = 300; // pixels per second.
-    
+
     public PlayerShip(double x, double y) {
        super(x, y);
+       engineTrail = new ArrayList<>();
     }
-    
+
     @Override
     public void update(double deltaTime) {
         // Update invulnerability timer
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= deltaTime;
         }
-        
+
         // Handle rotation.
         if (turnLeft) {
             angle -= rotationSpeed * deltaTime;
@@ -37,80 +42,183 @@ public class PlayerShip extends GameObject {
         if (turnRight) {
             angle += rotationSpeed * deltaTime;
         }
-        
+
         // Accelerate in the facing direction.
         if (accelerating) {
             // Adjust velocity based on current angle
             vx += Math.cos(angle) * acceleration * deltaTime;
             vy += Math.sin(angle) * acceleration * deltaTime;
+
+            // Add engine trail particles
+            addEngineTrail();
         }
-        
+
         // Limit the maximum speed.
         double speed = Math.hypot(vx, vy);
         if (speed > maxSpeed) {
             vx = (vx / speed) * maxSpeed;
             vy = (vy / speed) * maxSpeed;
         }
-        
+
         // Update position.
         x += vx * deltaTime;
         y += vy * deltaTime;
+
+        // Update engine trail
+        updateEngineTrail(deltaTime);
     }
-    
+
     @Override
     public void draw(Graphics2D g) {
+        // Draw engine trail first (behind ship)
+        drawEngineTrail(g);
+
         AffineTransform old = g.getTransform();
         g.translate(x, y);
         g.rotate(angle + Math.PI/2);
-        
+
         // If invulnerable, make the ship blink by reducing opacity
         Composite oldComposite = g.getComposite();
         if (invulnerabilityTimer > 0) {
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+            float alpha = (float)(0.3 + 0.7 * Math.abs(Math.sin(System.currentTimeMillis() * 0.02)));
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         }
-        
+
         // Create detailed spaceship shape using GeneralPath
         GeneralPath ship = new GeneralPath();
         ship.moveTo(0, -15);     // Ship tip (now pointing right)
-        ship.lineTo(-10, 10);    // Left wing tip
+        ship.lineTo(-8, 5);      // Left wing tip
+        ship.lineTo(-4, 8);      // Left engine mount
         ship.lineTo(0, 5);       // Rear center
-        ship.lineTo(10, 10);     // Right wing tip
+        ship.lineTo(4, 8);       // Right engine mount
+        ship.lineTo(8, 5);       // Right wing tip
         ship.closePath();
-        
-        // Fill the ship with a gradient for a 3D effect
-        GradientPaint shipPaint = new GradientPaint(-10, -15, Color.darkGray, 10, 10, Color.lightGray, true);
+
+        // Create a more advanced gradient for the ship
+        Color[] shipColors = {
+            new Color(100, 150, 255), // Light blue
+            new Color(50, 100, 200),  // Medium blue
+            new Color(20, 50, 150)    // Dark blue
+        };
+
+        float[] dist = {0.0f, 0.5f, 1.0f};
+        RadialGradientPaint shipPaint = new RadialGradientPaint(
+            0, -5, 12, dist, shipColors);
+
         Paint oldPaint = g.getPaint();
         g.setPaint(shipPaint);
         g.fill(ship);
-        
-        // Draw ship outline
-        g.setPaint(Color.black);
-        g.setStroke(new BasicStroke(2));
+
+        // Add metallic highlights
+        g.setPaint(new Color(200, 220, 255, 150));
+        GeneralPath highlight = new GeneralPath();
+        highlight.moveTo(-2, -12);
+        highlight.lineTo(2, -12);
+        highlight.lineTo(1, -8);
+        highlight.lineTo(-1, -8);
+        highlight.closePath();
+        g.fill(highlight);
+
+        // Draw ship outline with glowing effect
+        g.setPaint(new Color(0, 255, 255, 200));
+        g.setStroke(new BasicStroke(2.5f));
         g.draw(ship);
-        
-        // If accelerating, draw a flame effect behind the ship
+
+        // Inner glow
+        g.setPaint(new Color(255, 255, 255, 100));
+        g.setStroke(new BasicStroke(1f));
+        g.draw(ship);
+
+        // If accelerating, draw enhanced flame effect behind the ship
         if (accelerating) {
-            GeneralPath flame = new GeneralPath();
-            flame.moveTo(-4, 10);
-            flame.lineTo(0, 20);
-            flame.lineTo(4, 10);
-            flame.closePath();
-            GradientPaint flamePaint = new GradientPaint(0, 10, Color.orange, 0, 20, Color.red, true);
-            g.setPaint(flamePaint);
-            g.fill(flame);
+            drawEngineFlame(g);
         }
-        
+
         // Restore original paint, composite and transform
         g.setPaint(oldPaint);
         g.setComposite(oldComposite);
         g.setTransform(old);
     }
-    
+
+    private void addEngineTrail() {
+        if (accelerating) {
+            // Add trail particles from engine position
+            double engineX = x - Math.cos(angle) * 12;
+            double engineY = y - Math.sin(angle) * 12;
+
+            for (int i = 0; i < 3; i++) {
+                double offsetX = (Math.random() - 0.5) * 6;
+                double offsetY = (Math.random() - 0.5) * 6;
+                Color trailColor = new Color(0, 150, 255, 150);
+                engineTrail.add(new TrailParticle(
+                    engineX + offsetX, engineY + offsetY, trailColor, 0.5));
+            }
+        }
+    }
+
+    private void updateEngineTrail(double deltaTime) {
+        engineTrail.removeIf(particle -> !particle.isAlive());
+        for (TrailParticle particle : engineTrail) {
+            particle.update(deltaTime);
+        }
+    }
+
+    private void drawEngineTrail(Graphics2D g) {
+        // Create a copy to avoid concurrent modification
+        List<TrailParticle> trailCopy = new ArrayList<>(engineTrail);
+        for (TrailParticle particle : trailCopy) {
+            particle.draw(g);
+        }
+    }
+
+    private void drawEngineFlame(Graphics2D g) {
+        // Create animated flame effect
+        double flameLength = 15 + 5 * Math.sin(System.currentTimeMillis() * 0.05);
+
+        // Main flame
+        GeneralPath flame = new GeneralPath();
+        flame.moveTo(-3, 8);
+        flame.lineTo(0, 8 + flameLength);
+        flame.lineTo(3, 8);
+        flame.closePath();
+
+        // Gradient flame colors
+        Color[] flameColors = {Color.YELLOW, Color.ORANGE, Color.RED};
+        float[] flameDist = {0.0f, 0.5f, 1.0f};
+        LinearGradientPaint flamePaint = new LinearGradientPaint(
+            0, 8, 0, (float)(8 + flameLength), flameDist, flameColors);
+
+        g.setPaint(flamePaint);
+        g.fill(flame);
+
+        // Inner hot core
+        GeneralPath innerFlame = new GeneralPath();
+        innerFlame.moveTo(-1.5f, 8);
+        innerFlame.lineTo(0, 8 + flameLength * 0.7);
+        innerFlame.lineTo(1.5f, 8);
+        innerFlame.closePath();
+
+        g.setPaint(new Color(255, 255, 200, 200));
+        g.fill(innerFlame);
+
+        // Side flames for more realistic effect
+        for (int i = -1; i <= 1; i += 2) {
+            GeneralPath sideFlame = new GeneralPath();
+            sideFlame.moveTo(i * 2, 10);
+            sideFlame.lineTo(i * 4, 12 + flameLength * 0.4);
+            sideFlame.lineTo(i * 1, 12);
+            sideFlame.closePath();
+
+            g.setPaint(new Color(255, 100, 0, 150));
+            g.fill(sideFlame);
+        }
+    }
+
     @Override
     public Rectangle getBounds() {
         return new Rectangle((int)x - 10, (int)y - 10, 20, 20);
     }
-    
+
     // Methods to update input state.
     public void setTurnLeft(boolean turn) {
         turnLeft = turn;
@@ -124,11 +232,11 @@ public class PlayerShip extends GameObject {
             SoundManager.playThruster();
         }
     }
-    
+
     public int getLives() {
         return lives;
     }
-    
+
     // Called when the ship collides with an asteroid.
     public void damage() {
         // If the ship is currently invulnerable, ignore the damage
@@ -148,7 +256,7 @@ public class PlayerShip extends GameObject {
             invulnerabilityTimer = 2.0;
         }
     }
-    
+
     // Fire a bullet from the ship's tip.
     public Bullet fireBullet() {
         SoundManager.playLaser();
@@ -156,7 +264,7 @@ public class PlayerShip extends GameObject {
         double bulletY = y + Math.sin(angle) * 15;
         return new Bullet(bulletX, bulletY, angle);
     }
-    
+
     public void reset() {
         // Reset position
         x = GameEngine.WIDTH / 2;
@@ -173,7 +281,50 @@ public class PlayerShip extends GameObject {
         // Reset lives and invulnerability
         lives = 3;
         invulnerabilityTimer = 0;
+        // Clear engine trail
+        engineTrail.clear();
         // Ensure alive
         alive = true;
     }
-} 
+
+    // Inner class for engine trail particles
+    private static class TrailParticle {
+        private double x, y;
+        private Color color;
+        private double life, maxLife;
+        private double size;
+
+        public TrailParticle(double x, double y, Color color, double life) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.life = life;
+            this.maxLife = life;
+            this.size = 2 + Math.random() * 3;
+        }
+
+        public void update(double deltaTime) {
+            life -= deltaTime;
+            size *= 0.98;
+        }
+
+        public boolean isAlive() {
+            return life > 0 && size > 0.5;
+        }
+
+                public void draw(Graphics2D g) {
+            float alpha = (float)(life / maxLife);
+            int particleAlpha = Math.max(0, Math.min(255, (int)(color.getAlpha() * alpha)));
+            Color fadeColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), particleAlpha);
+
+            // Create glowing effect
+            float[] dist = {0.0f, 1.0f};
+            Color[] colors = {fadeColor, new Color(fadeColor.getRed(), fadeColor.getGreen(), fadeColor.getBlue(), 0)};
+            RadialGradientPaint paint = new RadialGradientPaint(
+                (float)x, (float)y, (float)size, dist, colors);
+
+            g.setPaint(paint);
+            g.fillOval((int)(x - size), (int)(y - size), (int)(size * 2), (int)(size * 2));
+        }
+    }
+}
