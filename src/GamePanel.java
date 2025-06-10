@@ -127,11 +127,15 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     private void updateAndDrawParticles(Graphics2D g) {
-        particles.removeIf(particle -> !particle.isAlive());
-        for (Particle particle : particles) {
+        // More efficient particle cleanup to reduce GC pressure
+        particles.removeIf(particle -> {
+            if (!particle.isAlive()) {
+                return true; // Remove dead particle
+            }
             particle.update();
             particle.draw(g);
-        }
+            return false; // Keep alive particle
+        });
     }
 
     public void addExplosion(double x, double y, int numParticles) {

@@ -165,6 +165,12 @@ public class GameEngine implements Runnable {
                     }
                 }
 
+                // Record frame for performance monitoring
+                PerformanceMonitor.recordFrame();
+
+                // Check memory pressure periodically
+                PerformanceMonitor.checkMemoryPressure();
+
                 // Sleep briefly (approximate 60 FPS update rate)
                 Thread.sleep(GameConfig.FRAME_TIME_MS);
             } catch (InterruptedException e) {
@@ -207,12 +213,23 @@ public class GameEngine implements Runnable {
     }
 
     private void processCollisions() {
-        // Check collisions between all pairs of objects
-        for (int i = 0; i < gameObjects.size(); i++) {
+        // Optimized collision detection with early exits
+        int size = gameObjects.size();
+        for (int i = 0; i < size; i++) {
            GameObject a = gameObjects.get(i);
-           for (int j = i + 1; j < gameObjects.size(); j++) {
+           if (!a.isAlive()) continue; // Early exit for dead objects
+
+           for (int j = i + 1; j < size; j++) {
                GameObject b = gameObjects.get(j);
-               if (a.isAlive() && b.isAlive() && a.getBounds().intersects(b.getBounds())) {
+               if (!b.isAlive()) continue; // Early exit for dead objects
+
+               // Quick distance check before expensive bounds intersection
+               double dx = a.getX() - b.getX();
+               double dy = a.getY() - b.getY();
+               double distance = dx * dx + dy * dy; // Avoid sqrt for performance
+               double maxDistance = a.getRadius() + b.getRadius();
+
+               if (distance <= maxDistance * maxDistance) {
                    handleCollision(a, b);
                }
            }

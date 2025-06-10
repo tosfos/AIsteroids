@@ -163,26 +163,36 @@ public class PlayerShip extends GameObject {
     }
 
     private void addEngineTrail() {
-        if (accelerating) {
+        if (accelerating && engineTrail.size() < 20) { // Limit max particles to prevent memory bloat
             // Add trail particles from engine position
             double engineX = x - Math.cos(angle) * 12;
             double engineY = y - Math.sin(angle) * 12;
 
-            for (int i = 0; i < 3; i++) {
-                double offsetX = (Math.random() - 0.5) * 6;
-                double offsetY = (Math.random() - 0.5) * 6;
-                Color trailColor = new Color(0, 150, 255, 150);
+            // Reduce particle count to improve performance
+            int particleCount = (int) GameConfig.PlayerShip.ENGINE_TRAIL_PARTICLES;
+            for (int i = 0; i < particleCount; i++) {
+                double offsetX = (Math.random() - 0.5) * GameConfig.PlayerShip.ENGINE_TRAIL_SPREAD;
+                double offsetY = (Math.random() - 0.5) * GameConfig.PlayerShip.ENGINE_TRAIL_SPREAD;
+                // Reuse color object to reduce allocations
                 engineTrail.add(new TrailParticle(
-                    engineX + offsetX, engineY + offsetY, trailColor, 0.5));
+                    engineX + offsetX, engineY + offsetY, TRAIL_COLOR,
+                    GameConfig.PlayerShip.ENGINE_TRAIL_LIFETIME));
             }
         }
     }
 
+    // Reusable color to reduce object allocation
+    private static final Color TRAIL_COLOR = new Color(0, 150, 255, 150);
+
     private void updateEngineTrail(double deltaTime) {
-        engineTrail.removeIf(particle -> !particle.isAlive());
-        for (TrailParticle particle : engineTrail) {
+        // Optimize by combining update and cleanup in one pass
+        engineTrail.removeIf(particle -> {
+            if (!particle.isAlive()) {
+                return true; // Remove dead particle
+            }
             particle.update(deltaTime);
-        }
+            return false; // Keep alive particle
+        });
     }
 
     private void drawEngineTrail(Graphics2D g) {
