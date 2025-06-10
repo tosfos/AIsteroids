@@ -1,7 +1,7 @@
 # 🚀 AIsteroids - Professional Space Shooter
 
 <p align="center">
-  <img src="art.png" alt="AIsteroids Game Art" width="600"/>
+  <img src="assets/art.png" alt="AIsteroids Game Art" width="600"/>
 </p>
 
 **A completely transformed, professional-grade arcade space shooter built in Java with cutting-edge features and stunning visual effects.**
