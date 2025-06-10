@@ -23,6 +23,7 @@ public class TestRunner {
 
         if (testsPassed == testsRun) {
             System.out.println("🎉 ALL TESTS PASSED!");
+            System.exit(0);
         } else {
             System.out.println("❌ Some tests failed. Check output above.");
             System.exit(1);
