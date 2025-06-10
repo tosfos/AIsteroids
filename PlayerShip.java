@@ -288,6 +288,9 @@ public class PlayerShip extends GameObject {
         lastFireTime = 0;
         SoundManager.playLaser();
 
+        // Track bullets fired for achievements
+        LeaderboardSystem.bulletFired();
+
         List<Bullet> bullets = new ArrayList<>();
         double bulletX = x + Math.cos(angle) * 15;
         double bulletY = y + Math.sin(angle) * 15;
@@ -323,6 +326,14 @@ public class PlayerShip extends GameObject {
     public void addPowerUp(PowerUp.PowerUpType type) {
         activePowerUps.put(type, type.getDuration());
         SoundManager.playPowerUp();
+
+        // Track power-up collection
+        LeaderboardSystem.powerUpCollected();
+
+        // Track specific power-up usage
+        if (type == PowerUp.PowerUpType.RAPID_FIRE) {
+            LeaderboardSystem.rapidFireUsed();
+        }
 
         // Apply immediate effects
         switch (type) {

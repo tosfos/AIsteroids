@@ -157,6 +157,9 @@ public class Asteroid extends GameObject {
 
        // Notify wave system of asteroid destruction
        engine.getWaveSystem().asteroidDestroyed();
+
+       // Track achievement progress
+       LeaderboardSystem.asteroidDestroyed();
        } else {
           // Small asteroids worth 100 points with wave multiplier
           int multipliedPoints = 100 * engine.getWaveSystem().getScoreMultiplier();
@@ -164,6 +167,9 @@ public class Asteroid extends GameObject {
 
           // Notify wave system of asteroid destruction
           engine.getWaveSystem().asteroidDestroyed();
+
+          // Track achievement progress
+          LeaderboardSystem.asteroidDestroyed();
        }
        // Mark this asteroid as destroyed.
        alive = false;

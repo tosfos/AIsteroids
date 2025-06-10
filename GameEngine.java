@@ -39,6 +39,9 @@ public class GameEngine implements Runnable {
        // Initialize wave system
        waveSystem = new WaveSystem();
 
+       // Track game start
+       LeaderboardSystem.gameStarted();
+
        // Create player ship at center.
        player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
        addGameObject(player);
@@ -92,6 +95,10 @@ public class GameEngine implements Runnable {
                 SoundManager.playGameOver(); // Play game over sound
                 SoundManager.stopAmbientSpace(); // Stop ambient sound
                 MusicSystem.stopMusic(); // Stop dynamic music
+
+                // Record final stats and add to leaderboard
+                LeaderboardSystem.gameEnded(score, waveSystem.getCurrentWave());
+                LeaderboardSystem.addScore(LeaderboardSystem.getPlayerName(), score, waveSystem.getCurrentWave());
             }
 
             // Sleep briefly (approximate 60 FPS update rate)
@@ -171,7 +178,7 @@ public class GameEngine implements Runnable {
              asteroid.hit(this);
              SoundManager.playAsteroidHit(); // Play impact sound
          }
-                  // Player ship colliding with an asteroid.
+                           // Player ship colliding with an asteroid.
          else if (a instanceof PlayerShip && b instanceof Asteroid) {
             PlayerShip ship = (PlayerShip)a;
             if (!ship.hasShield()) {
@@ -188,10 +195,13 @@ public class GameEngine implements Runnable {
                     // Create warp effect at new position
                     createWarpEffect(ship.getX(), ship.getY());
                 }
+            } else {
+                // Shield blocked the hit
+                LeaderboardSystem.shieldBlocked();
             }
          } else if (b instanceof PlayerShip && a instanceof Asteroid) {
             PlayerShip ship = (PlayerShip)b;
-                         if (!ship.hasShield()) {
+            if (!ship.hasShield()) {
                 double oldX = ship.getX();
                 double oldY = ship.getY();
                 ship.damage();
@@ -205,6 +215,9 @@ public class GameEngine implements Runnable {
                     // Create warp effect at new position
                     createWarpEffect(ship.getX(), ship.getY());
                 }
+            } else {
+                // Shield blocked the hit
+                LeaderboardSystem.shieldBlocked();
             }
           }
          // Player ship colliding with power-up.

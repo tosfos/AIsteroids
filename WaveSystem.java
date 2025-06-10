@@ -56,9 +56,12 @@ public class WaveSystem {
         }
     }
 
-    private void completeWave() {
+        private void completeWave() {
         waveInProgress = false;
         long waveTime = System.currentTimeMillis() - waveStartTime;
+
+        // Track wave completion in leaderboard system
+        LeaderboardSystem.waveCompleted(currentWave, perfectWave, bossWave, waveTime);
 
         // Calculate wave completion bonus
         int bonus = waveCompletionBonus * scoreMultiplier;
