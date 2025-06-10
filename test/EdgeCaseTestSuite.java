@@ -1,12 +1,12 @@
 import java.awt.Rectangle;
 
-public class AdvancedTestRunner {
+public class EdgeCaseTestSuite {
 
     private int testsRun = 0;
     private int testsPassed = 0;
 
     public static void main(String[] args) {
-        AdvancedTestRunner runner = new AdvancedTestRunner();
+        EdgeCaseTestSuite runner = new EdgeCaseTestSuite();
         runner.runAllTests();
     }
 
@@ -29,6 +29,7 @@ public class AdvancedTestRunner {
 
         if (testsPassed == testsRun) {
             System.out.println("🏆 ALL ADVANCED TESTS PASSED!");
+            System.exit(0);
         } else {
             System.out.println("❌ Some tests failed. Check output above.");
             System.exit(1);

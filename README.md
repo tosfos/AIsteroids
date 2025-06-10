@@ -97,31 +97,52 @@
 # Clone and compile
 git clone <repository-url>
 cd AIsteroids
-javac *.java
+./build.sh
 
 # Run the game
-java Main
+java -cp bin:lib/* Main
+```
+
+### **Manual Build**
+```bash
+# Create build directory
+mkdir -p bin
+
+# Compile source files
+javac -d bin -cp "lib/*" src/*.java
+
+# Run the game
+java -cp bin:lib/* Main
 ```
 
 ## 🧪 **Testing**
 
-This project features a comprehensive test suite with **43 automated tests** covering all game systems:
+This project features a comprehensive test suite with **95+ automated tests** covering all game systems:
 
-- **Test Coverage**: 8 major game systems with unit, integration, and edge case tests
-- **Test Runners**: Basic (16 tests) + Advanced (27 tests) test suites
+- **Test Coverage**: All major game systems with unit, integration, and edge case tests
+- **Test Suites**: 8 focused test files covering every component
 - **Success Rate**: 100% - All tests pass
 - **Zero Dependencies**: Pure Java testing framework
 
 ### **Quick Test Commands**
 ```bash
-# Run basic test suite
-java -ea TestRunner
+# Run all tests with test script
+./test.sh
 
-# Run advanced test suite
-java -ea AdvancedTestRunner
+# Or run test suites individually:
+javac -d bin -cp "lib/*" src/*.java test/*.java
 
-# Run full test suite
-java -ea TestRunner && java -ea AdvancedTestRunner
+# Integration tests (multi-system testing)
+java -ea -cp bin:lib/* IntegrationTestSuite
+
+# Edge case tests (robustness testing)
+java -ea -cp bin:lib/* EdgeCaseTestSuite
+
+# Focused component tests
+java -ea -cp bin:lib/* ScoreCalculatorTest
+java -ea -cp bin:lib/* CollisionTest
+java -ea -cp bin:lib/* PowerUpTest
+java -ea -cp bin:lib/* WaveSystemTest
 ```
 
 📚 **[Complete Testing Guide →](TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.

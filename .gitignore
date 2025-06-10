@@ -1,6 +1,11 @@
 # Compiled class files
 *.class
 
+# Build output
+bin/
+build/
+out/
+
 # Log Files
 *.log
 
@@ -18,6 +23,8 @@
 *.zip
 *.tar.gz
 *.rar
+# Exception: keep lib directory jars
+!lib/*.jar
 
 # Native library files
 *.dll

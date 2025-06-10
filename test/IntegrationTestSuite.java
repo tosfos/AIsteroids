@@ -1,10 +1,10 @@
-public class TestRunner {
+public class IntegrationTestSuite {
 
     private int testsRun = 0;
     private int testsPassed = 0;
 
     public static void main(String[] args) {
-        TestRunner runner = new TestRunner();
+        IntegrationTestSuite runner = new IntegrationTestSuite();
         runner.runAllTests();
     }
 
@@ -23,6 +23,7 @@ public class TestRunner {
 
         if (testsPassed == testsRun) {
             System.out.println("🎉 ALL TESTS PASSED!");
+            System.exit(0);
         } else {
             System.out.println("❌ Some tests failed. Check output above.");
             System.exit(1);
