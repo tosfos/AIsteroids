@@ -1,11 +1,15 @@
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class GameEngine implements Runnable {
     // List of active game objects (player, asteroids, bullets)
     private List<GameObject> gameObjects;
-    private boolean running = false;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
@@ -18,96 +22,160 @@ public class GameEngine implements Runnable {
     // Keep a reference to the player ship.
     private PlayerShip player;
 
-        // Reference to game panel for particle effects
+    // Reference to game panel for particle effects
     private GamePanel gamePanel;
 
     // Wave system for progressive difficulty
     private WaveSystem waveSystem;
 
-    private int score = 0;
-    private boolean gameOver = false;
+    private volatile int score = 0;
+    private volatile boolean gameOver = false;
+
+    // Controlled thread management
+    private ExecutorService waveManagerExecutor;
+    private final AtomicBoolean waveManagerRunning = new AtomicBoolean(false);
 
     public GameEngine() {
        gameObjects = new ArrayList<>();
 
-       // Start ambient space sound
-       SoundManager.startAmbientSpace();
+       try {
+           // Start ambient space sound
+           SoundManager.startAmbientSpace();
 
-              // Start dynamic music
-       MusicSystem.startMusic();
+           // Start dynamic music
+           MusicSystem.startMusic();
 
-       // Initialize wave system
-       waveSystem = new WaveSystem();
+           // Initialize wave system
+           waveSystem = new WaveSystem();
 
-       // Track game start
-       LeaderboardSystem.gameStarted();
+           // Track game start
+           LeaderboardSystem.gameStarted();
 
-       // Create player ship at center.
-       player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
-       addGameObject(player);
+           // Create player ship at center.
+           player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
+           addGameObject(player);
 
-       // Spawn initial wave of asteroids based on wave system
-       spawnWaveAsteroids();
+           // Spawn initial wave of asteroids based on wave system
+           spawnWaveAsteroids();
 
-              // Start a separate thread to periodically spawn power-ups and check wave completion
-       new Thread(() -> {
-         while (true) {
-           try {
-             Thread.sleep(3000); // Check every 3 seconds
-           } catch (InterruptedException e) {
-             Thread.currentThread().interrupt();
-             break;
-           }
+           // Start controlled wave manager thread
+           startWaveManager();
+       } catch (Exception e) {
+           System.err.println("Error initializing GameEngine: " + e.getMessage());
+           cleanup();
+           throw new RuntimeException("Failed to initialize game", e);
+       }
+    }
 
-           // Spawn power-ups based on wave system
-           WaveSystem.PowerUpSpawnInfo powerUpInfo = waveSystem.getPowerUpSpawnInfo();
-           if (Math.random() < powerUpInfo.spawnChance) {
-             addGameObject(PowerUp.createRandomPowerUp(WIDTH, HEIGHT));
-           }
+    private void startWaveManager() {
+        waveManagerExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "WaveManager");
+            t.setDaemon(true);
+            return t;
+        });
 
-           // Check if we need to spawn more asteroids for current wave
-           checkAndSpawnAsteroids();
-         }
-       }, "WaveManager").start();
+        waveManagerRunning.set(true);
+        waveManagerExecutor.submit(() -> {
+            while (waveManagerRunning.get() && !Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(3000); // Check every 3 seconds
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+
+                if (!waveManagerRunning.get()) break;
+
+                try {
+                    // Spawn power-ups based on wave system
+                    WaveSystem.PowerUpSpawnInfo powerUpInfo = waveSystem.getPowerUpSpawnInfo();
+                    if (Math.random() < powerUpInfo.spawnChance) {
+                        addGameObject(PowerUp.createRandomPowerUp(WIDTH, HEIGHT));
+                    }
+
+                    // Check if we need to spawn more asteroids for current wave
+                    checkAndSpawnAsteroids();
+                } catch (Exception e) {
+                    System.err.println("Error in wave manager: " + e.getMessage());
+                }
+            }
+        });
     }
 
     public void start() {
-       running = true;
-       gameThread = new Thread(this, "GameEngineThread");
-       gameThread.start();
+       if (running.compareAndSet(false, true)) {
+           gameThread = new Thread(this, "GameEngineThread");
+           gameThread.start();
+       }
     }
 
     public void stop() {
-       running = false;
+       running.set(false);
+       cleanup();
+    }
+
+    private void cleanup() {
+        // Stop wave manager
+        if (waveManagerRunning.get()) {
+            waveManagerRunning.set(false);
+            if (waveManagerExecutor != null) {
+                waveManagerExecutor.shutdown();
+                try {
+                    if (!waveManagerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                        waveManagerExecutor.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    waveManagerExecutor.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        // Stop audio systems
+        try {
+            SoundManager.stopAmbientSpace();
+            MusicSystem.stopMusic();
+        } catch (Exception e) {
+            System.err.println("Error stopping audio systems: " + e.getMessage());
+        }
     }
 
     @Override
     public void run() {
         long lastTime = System.nanoTime();
-        while (running) {
-            long now = System.nanoTime();
-            double deltaTime = (now - lastTime) / 1e9;  // Convert nanoseconds to seconds.
-            lastTime = now;
-
-            update(deltaTime);
-            if (!player.isAlive() && !gameOver) {
-                gameOver = true;
-                SoundManager.playGameOver(); // Play game over sound
-                SoundManager.stopAmbientSpace(); // Stop ambient sound
-                MusicSystem.stopMusic(); // Stop dynamic music
-
-                // Record final stats and add to leaderboard
-                LeaderboardSystem.gameEnded(score, waveSystem.getCurrentWave());
-                LeaderboardSystem.addScore(LeaderboardSystem.getPlayerName(), score, waveSystem.getCurrentWave());
-            }
-
-            // Sleep briefly (approximate 60 FPS update rate)
+        while (running.get() && !Thread.currentThread().isInterrupted()) {
             try {
-               Thread.sleep(16);
+                long now = System.nanoTime();
+                double deltaTime = (now - lastTime) / 1e9;  // Convert nanoseconds to seconds.
+                lastTime = now;
+
+                update(deltaTime);
+                if (!player.isAlive() && !gameOver) {
+                    gameOver = true;
+                    try {
+                        SoundManager.playGameOver(); // Play game over sound
+                        SoundManager.stopAmbientSpace(); // Stop ambient sound
+                        MusicSystem.stopMusic(); // Stop dynamic music
+
+                        // Record final stats and add to leaderboard
+                        LeaderboardSystem.gameEnded(score, waveSystem.getCurrentWave());
+                        LeaderboardSystem.addScore(LeaderboardSystem.getPlayerName(), score, waveSystem.getCurrentWave());
+                    } catch (Exception e) {
+                        System.err.println("Error handling game over: " + e.getMessage());
+                    }
+                }
+
+                // Sleep briefly (approximate 60 FPS update rate)
+                Thread.sleep(16);
             } catch (InterruptedException e) {
-               Thread.currentThread().interrupt();
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                System.err.println("Error in game loop: " + e.getMessage());
+                // Continue running unless it's a critical error
             }
         }
+        cleanup();
     }
 
     public void update(double deltaTime) {
