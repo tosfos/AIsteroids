@@ -153,6 +153,31 @@ public class GamePanel extends JPanel implements KeyListener {
         String scoreText = "SCORE: " + String.format("%06d", engine.getScore());
         drawGlowText(g, scoreText, 10, 50, new Color(255, 255, 0), new Color(255, 255, 0, 100));
 
+        // Wave information
+        WaveSystem waveSystem = engine.getWaveSystem();
+        String waveText = "WAVE: " + waveSystem.getCurrentWave();
+        if (waveSystem.isBossWave()) {
+            waveText += " [BOSS]";
+            g.setColor(new Color(255, 100, 100, 200));
+        } else {
+            g.setColor(new Color(100, 255, 100, 200));
+        }
+        g.drawString(waveText, 10, 75);
+
+        // Asteroids remaining
+        String asteroidsText = "ASTEROIDS: " + waveSystem.getAsteroidsRemaining();
+        g.setColor(new Color(255, 255, 255, 200));
+        g.drawString(asteroidsText, 10, 100);
+
+        // Score multiplier indicator
+        if (waveSystem.getScoreMultiplier() > 1) {
+            String multiplierText = "x" + waveSystem.getScoreMultiplier();
+            g.setColor(new Color(255, 255, 0, 255));
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString(multiplierText, engine.getScore() > 0 ? 200 : 150, 50);
+            g.setFont(hudFont); // Reset font
+        }
+
         // Add a subtle border effect
         g.setColor(new Color(0, 255, 255, 50));
         g.setStroke(new BasicStroke(2));

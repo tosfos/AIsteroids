@@ -150,11 +150,20 @@ public class Asteroid extends GameObject {
           engine.addGameObject(new Asteroid(x, y, size - 1,
               newSpeed2 * Math.cos(angle2), newSpeed2 * Math.sin(angle2)));
 
-          // Award points based on asteroid size
-          engine.addScore(size * 100);
+                 // Award points based on asteroid size with wave multiplier
+       int basePoints = size * 100;
+       int multipliedPoints = basePoints * engine.getWaveSystem().getScoreMultiplier();
+       engine.addScore(multipliedPoints);
+
+       // Notify wave system of asteroid destruction
+       engine.getWaveSystem().asteroidDestroyed();
        } else {
-          // Small asteroids worth 100 points
-          engine.addScore(100);
+          // Small asteroids worth 100 points with wave multiplier
+          int multipliedPoints = 100 * engine.getWaveSystem().getScoreMultiplier();
+          engine.addScore(multipliedPoints);
+
+          // Notify wave system of asteroid destruction
+          engine.getWaveSystem().asteroidDestroyed();
        }
        // Mark this asteroid as destroyed.
        alive = false;
