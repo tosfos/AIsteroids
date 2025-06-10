@@ -14,7 +14,7 @@ public class PlayerShip extends GameObject {
     private boolean turnRight = false;
     private boolean accelerating = false;
     // Player lives.
-    private int lives = 3;
+    private int lives = GameConfig.PlayerShip.INITIAL_LIVES;
     // Invulnerability timer in seconds after being hit.
     private double invulnerabilityTimer = 0;
         // Engine trail particles
@@ -22,15 +22,15 @@ public class PlayerShip extends GameObject {
 
     // Power-up system
     private Map<PowerUp.PowerUpType, Double> activePowerUps;
-    private double fireRate = 10.0; // Base fire rate (shots per second) - much faster for better gameplay
+    private double fireRate = GameConfig.PlayerShip.FIRE_RATE; // Base fire rate (shots per second)
     private double lastFireTime = 0;
     private boolean hasShield = false;
     private double shieldTimer = 0;
 
     // Constants for rotation and acceleration.
-    private double rotationSpeed = Math.toRadians(180); // 180° per second.
-    private double acceleration = 200; // pixels per second^2.
-    private double maxSpeed = 300; // pixels per second.
+    private double rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
+    private double acceleration = GameConfig.PlayerShip.ACCELERATION; // pixels per second^2.
+    private double maxSpeed = GameConfig.PlayerShip.MAX_SPEED; // pixels per second.
 
     public PlayerShip(double x, double y) {
        super(x, y);
@@ -42,6 +42,8 @@ public class PlayerShip extends GameObject {
 
     @Override
     public void update(double deltaTime) {
+        InputValidator.validateDeltaTime(deltaTime);
+
         // Update invulnerability timer
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= deltaTime;
@@ -98,7 +100,9 @@ public class PlayerShip extends GameObject {
         // If invulnerable, make the ship blink by reducing opacity
         Composite oldComposite = g.getComposite();
         if (invulnerabilityTimer > 0) {
-            float alpha = (float)(0.3 + 0.7 * Math.abs(Math.sin(System.currentTimeMillis() * 0.02)));
+            float alpha = (float)(GameConfig.Effects.INVULNERABILITY_MIN_ALPHA +
+                (GameConfig.Effects.INVULNERABILITY_MAX_ALPHA - GameConfig.Effects.INVULNERABILITY_MIN_ALPHA) *
+                Math.abs(Math.sin(System.currentTimeMillis() * GameConfig.Effects.INVULNERABILITY_BLINK_SPEED)));
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         }
 
@@ -159,26 +163,36 @@ public class PlayerShip extends GameObject {
     }
 
     private void addEngineTrail() {
-        if (accelerating) {
+        if (accelerating && engineTrail.size() < 20) { // Limit max particles to prevent memory bloat
             // Add trail particles from engine position
             double engineX = x - Math.cos(angle) * 12;
             double engineY = y - Math.sin(angle) * 12;
 
-            for (int i = 0; i < 3; i++) {
-                double offsetX = (Math.random() - 0.5) * 6;
-                double offsetY = (Math.random() - 0.5) * 6;
-                Color trailColor = new Color(0, 150, 255, 150);
+            // Reduce particle count to improve performance
+            int particleCount = (int) GameConfig.PlayerShip.ENGINE_TRAIL_PARTICLES;
+            for (int i = 0; i < particleCount; i++) {
+                double offsetX = (Math.random() - 0.5) * GameConfig.PlayerShip.ENGINE_TRAIL_SPREAD;
+                double offsetY = (Math.random() - 0.5) * GameConfig.PlayerShip.ENGINE_TRAIL_SPREAD;
+                // Reuse color object to reduce allocations
                 engineTrail.add(new TrailParticle(
-                    engineX + offsetX, engineY + offsetY, trailColor, 0.5));
+                    engineX + offsetX, engineY + offsetY, TRAIL_COLOR,
+                    GameConfig.PlayerShip.ENGINE_TRAIL_LIFETIME));
             }
         }
     }
 
+    // Reusable color to reduce object allocation
+    private static final Color TRAIL_COLOR = new Color(0, 150, 255, 150);
+
     private void updateEngineTrail(double deltaTime) {
-        engineTrail.removeIf(particle -> !particle.isAlive());
-        for (TrailParticle particle : engineTrail) {
+        // Optimize by combining update and cleanup in one pass
+        engineTrail.removeIf(particle -> {
+            if (!particle.isAlive()) {
+                return true; // Remove dead particle
+            }
             particle.update(deltaTime);
-        }
+            return false; // Keep alive particle
+        });
     }
 
     private void drawEngineTrail(Graphics2D g) {
@@ -275,8 +289,8 @@ public class PlayerShip extends GameObject {
             y = GameEngine.HEIGHT / 2;
             vx = 0;
             vy = 0;
-            // Set invulnerability period (2 seconds) to prevent immediate further damage
-            invulnerabilityTimer = 2.0;
+            // Set invulnerability period to prevent immediate further damage
+            invulnerabilityTimer = GameConfig.PlayerShip.INVULNERABILITY_TIME;
             // Play shield recharge sound when respawning
             SoundManager.playShieldRecharge();
 
@@ -357,8 +371,10 @@ public class PlayerShip extends GameObject {
     }
 
     public void addPowerUp(PowerUp.PowerUpType type) {
+        InputValidator.validateNotNull(type, "type");
         activePowerUps.put(type, type.getDuration());
-        SoundManager.playPowerUp();
+        InputValidator.safeExecute(() -> SoundManager.playPowerUp(),
+            "Failed to play power-up sound");
 
         // Track power-up collection
         LeaderboardSystem.powerUpCollected();

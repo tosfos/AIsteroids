@@ -75,34 +75,48 @@ public class GamePanel extends JPanel implements KeyListener {
        super.paintComponent(g);
        Graphics2D g2d = (Graphics2D) g;
 
-       // Enable high-quality rendering
-       g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-       g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-       g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-       g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+       setupRenderingQuality(g2d);
+       drawGameWorld(g2d);
+       drawUI(g2d);
+    }
 
-       // Draw animated starfield background
-       drawStarfield(g2d);
+    private void setupRenderingQuality(Graphics2D g2d) {
+        // Enable high-quality rendering
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    }
 
-       // Draw particle effects
-       updateAndDrawParticles(g2d);
+    private void drawGameWorld(Graphics2D g2d) {
+        // Draw animated starfield background
+        drawStarfield(g2d);
 
-       // Update and draw enhanced particle system
-       particleSystem.update(1.0/60.0);
-       particleSystem.draw(g2d);
+        // Draw particle effects
+        updateAndDrawParticles(g2d);
 
-       // Draw all game objects with enhanced effects
-       for (GameObject obj : engine.getGameObjects()) {
+        // Update and draw enhanced particle system
+        particleSystem.update(1.0/60.0);
+        particleSystem.draw(g2d);
+
+        // Draw all game objects with enhanced effects
+        drawGameObjects(g2d);
+    }
+
+    private void drawGameObjects(Graphics2D g2d) {
+        for (GameObject obj : engine.getGameObjects()) {
             obj.draw(g2d);
-       }
+        }
+    }
 
-       // Draw enhanced UI
-       drawEnhancedHUD(g2d);
+    private void drawUI(Graphics2D g2d) {
+        // Draw enhanced UI
+        drawEnhancedHUD(g2d);
 
-       // If game is over, draw the enhanced game over screen
-       if (engine.isGameOver()) {
-           drawEnhancedGameOver(g2d);
-       }
+        // If game is over, draw the enhanced game over screen
+        if (engine.isGameOver()) {
+            drawEnhancedGameOver(g2d);
+        }
     }
 
     private void drawStarfield(Graphics2D g) {
@@ -113,11 +127,15 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     private void updateAndDrawParticles(Graphics2D g) {
-        particles.removeIf(particle -> !particle.isAlive());
-        for (Particle particle : particles) {
+        // More efficient particle cleanup to reduce GC pressure
+        particles.removeIf(particle -> {
+            if (!particle.isAlive()) {
+                return true; // Remove dead particle
+            }
             particle.update();
             particle.draw(g);
-        }
+            return false; // Keep alive particle
+        });
     }
 
     public void addExplosion(double x, double y, int numParticles) {
