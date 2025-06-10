@@ -161,9 +161,11 @@ public class Asteroid extends GameObject {
     }
 
     private void triggerExplosionEffect(GameEngine engine) {
-        // This method would be called to create explosion particles
-        // For now, we'll leave it as a placeholder since we need to
-        // coordinate with the GamePanel's particle system
+        // Create explosion particles through the engine
+        engine.createExplosionEffect(x, y, size);
+
+        // Create debris when asteroid breaks apart
+        engine.createDebrisEffect(x, y, size * 3);
     }
 
     // Factory method to create a random asteroid.

@@ -272,6 +272,9 @@ public class PlayerShip extends GameObject {
             invulnerabilityTimer = 2.0;
             // Play shield recharge sound when respawning
             SoundManager.playShieldRecharge();
+
+            // Create warp effect when respawning (needs to be called from GameEngine)
+            // This will be handled by GameEngine when damage occurs
         }
     }
 

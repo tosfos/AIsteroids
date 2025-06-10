@@ -10,6 +10,7 @@ public class GamePanel extends JPanel implements KeyListener {
     private PlayerShip player;
     private List<Star> stars;
     private List<Particle> particles;
+    private ParticleSystem particleSystem;
     private Random rand = new Random();
 
     // UI enhancement variables
@@ -25,6 +26,12 @@ public class GamePanel extends JPanel implements KeyListener {
 
        // Initialize starfield
        initializeStarfield();
+
+       // Initialize particle system
+       particleSystem = new ParticleSystem();
+
+       // Set reference in engine for particle effects
+       engine.setGamePanel(this);
 
        // Initialize particle system
        particles = new ArrayList<>();
@@ -78,6 +85,10 @@ public class GamePanel extends JPanel implements KeyListener {
        // Draw particle effects
        updateAndDrawParticles(g2d);
 
+       // Update and draw enhanced particle system
+       particleSystem.update(1.0/60.0);
+       particleSystem.draw(g2d);
+
        // Draw all game objects with enhanced effects
        for (GameObject obj : engine.getGameObjects()) {
             obj.draw(g2d);
@@ -120,6 +131,10 @@ public class GamePanel extends JPanel implements KeyListener {
                 Math.sin(angle) * speed,
                 color, 1.0 + rand.nextDouble() * 2.0));
         }
+    }
+
+    public ParticleSystem getParticleSystem() {
+        return particleSystem;
     }
 
     private void drawEnhancedHUD(Graphics2D g) {

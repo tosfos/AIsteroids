@@ -17,6 +17,9 @@ public class GameEngine implements Runnable {
     // Keep a reference to the player ship.
     private PlayerShip player;
 
+    // Reference to game panel for particle effects
+    private GamePanel gamePanel;
+
     private int score = 0;
     private boolean gameOver = false;
 
@@ -129,26 +132,58 @@ public class GameEngine implements Runnable {
         private void handleCollision(GameObject a, GameObject b) {
          // Bullet hits asteroid.
          if (a instanceof Bullet && b instanceof Asteroid) {
-             ((Bullet) a).setAlive(false);
-             ((Asteroid) b).hit(this); // Asteroid may split or get destroyed.
+             Bullet bullet = (Bullet) a;
+             Asteroid asteroid = (Asteroid) b;
+             bullet.setAlive(false);
+
+             // Create impact sparks
+             double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
+                                           asteroid.getX() - bullet.getX());
+             createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
+
+             asteroid.hit(this); // Asteroid may split or get destroyed.
              SoundManager.playAsteroidHit(); // Play impact sound
          } else if (b instanceof Bullet && a instanceof Asteroid) {
-             ((Bullet) b).setAlive(false);
-             ((Asteroid) a).hit(this);
+             Bullet bullet = (Bullet) b;
+             Asteroid asteroid = (Asteroid) a;
+             bullet.setAlive(false);
+
+             // Create impact sparks
+             double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
+                                           asteroid.getX() - bullet.getX());
+             createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
+
+             asteroid.hit(this);
              SoundManager.playAsteroidHit(); // Play impact sound
          }
-         // Player ship colliding with an asteroid.
+                  // Player ship colliding with an asteroid.
          else if (a instanceof PlayerShip && b instanceof Asteroid) {
             PlayerShip ship = (PlayerShip)a;
             if (!ship.hasShield()) {
+                double oldX = ship.getX();
+                double oldY = ship.getY();
                 ship.damage();
+                if (ship.isAlive()) {
+                    // Create warp effect at old position
+                    createWarpEffect(oldX, oldY);
+                    // Create warp effect at new position
+                    createWarpEffect(ship.getX(), ship.getY());
+                }
             }
          } else if (b instanceof PlayerShip && a instanceof Asteroid) {
             PlayerShip ship = (PlayerShip)b;
             if (!ship.hasShield()) {
+                double oldX = ship.getX();
+                double oldY = ship.getY();
                 ship.damage();
+                if (ship.isAlive()) {
+                    // Create warp effect at old position
+                    createWarpEffect(oldX, oldY);
+                    // Create warp effect at new position
+                    createWarpEffect(ship.getX(), ship.getY());
+                }
             }
-         }
+          }
          // Player ship colliding with power-up.
          else if (a instanceof PlayerShip && b instanceof PowerUp) {
             ((PlayerShip)a).addPowerUp(((PowerUp)b).getType());
@@ -188,7 +223,7 @@ public class GameEngine implements Runnable {
         return gameOver;
     }
 
-        public void restart() {
+            public void restart() {
         synchronized(lock) {
             // Clear all existing objects
             gameObjects.clear();
@@ -210,6 +245,39 @@ public class GameEngine implements Runnable {
 
             // Restart ambient sound
             SoundManager.startAmbientSpace();
+
+            // Clear particle effects
+            if (gamePanel != null) {
+                gamePanel.getParticleSystem().clear();
+            }
+        }
+    }
+
+    public void setGamePanel(GamePanel panel) {
+        this.gamePanel = panel;
+    }
+
+    public void createExplosionEffect(double x, double y, int intensity) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createExplosion(x, y, intensity);
+        }
+    }
+
+    public void createDebrisEffect(double x, double y, int count) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createDebris(x, y, count);
+        }
+    }
+
+    public void createWarpEffect(double x, double y) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createWarpEffect(x, y);
+        }
+    }
+
+    public void createImpactSparks(double x, double y, double angle) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createImpactSparks(x, y, angle);
         }
     }
 }
