@@ -55,4 +55,22 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+java -ea -cp bin:lib/* LeaderboardSystemTest
+if [ $? -ne 0 ]; then
+    echo "LeaderboardSystem tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* BulletTest
+if [ $? -ne 0 ]; then
+    echo "Bullet tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* AsteroidTest
+if [ $? -ne 0 ]; then
+    echo "Asteroid tests failed!"
+    exit 1
+fi
+
 echo "All tests passed! ✅"

@@ -117,10 +117,10 @@ java -cp bin:lib/* Main
 
 ## 🧪 **Testing**
 
-This project features a comprehensive test suite with **43 automated tests** covering all game systems:
+This project features a comprehensive test suite with **95+ automated tests** covering all game systems:
 
-- **Test Coverage**: 8 major game systems with unit, integration, and edge case tests
-- **Test Runners**: Basic (16 tests) + Advanced (27 tests) test suites
+- **Test Coverage**: All major game systems with unit, integration, and edge case tests
+- **Test Suites**: 8 focused test files covering every component
 - **Success Rate**: 100% - All tests pass
 - **Zero Dependencies**: Pure Java testing framework
 

@@ -13,27 +13,33 @@ This document provides comprehensive information about the testing infrastructur
 
 ## 🎯 **Overview**
 
-The AIsteroids project features a comprehensive test suite with **43 automated tests** that verify game functionality, edge cases, and system robustness. The testing framework is built using pure Java without external dependencies.
+The AIsteroids project features a comprehensive test suite with **95+ automated tests** that verify game functionality, edge cases, and system robustness. The testing framework is built using pure Java without external dependencies.
 
 ### **Test Statistics**
-- **Total Tests**: 43
-- **Test Runners**: 2 (Basic + Advanced)
+- **Total Tests**: 95+ across all test suites
+- **Test Suites**: 8 focused test files
 - **Success Rate**: 100%
-- **Coverage Areas**: 8 major game systems
-- **Test Types**: Unit, Integration, Edge Case, Robustness
+- **Coverage Areas**: All major game systems
+- **Test Types**: Unit, Integration, Edge Case, Robustness, Component-focused
 
 ## 🏗️ **Test Architecture**
 
 ### **Test Structure**
 ```
 AIsteroids/
-├── TestRunner.java              # Core functionality tests (16 tests)
-├── AdvancedTestRunner.java      # Edge cases & robustness (27 tests)
-├── ScoreCalculator.java         # Extracted scoring logic for testing
-├── test/
-│   ├── GameObjectTest.java      # JUnit-style tests (reference)
-│   └── ScoreCalculatorTest.java # JUnit-style tests (reference)
-└── TESTING.md                   # This documentation
+├── src/                         # Main source code
+├── test/                        # All test files
+│   ├── IntegrationTestSuite.java    # Multi-system integration tests (16 tests)
+│   ├── EdgeCaseTestSuite.java       # Edge cases & robustness (27 tests)
+│   ├── ScoreCalculatorTest.java     # Score calculation tests (6 tests)
+│   ├── CollisionTest.java           # Collision detection tests (9 tests)
+│   ├── PowerUpTest.java             # Power-up system tests (9 tests)
+│   ├── WaveSystemTest.java          # Wave system tests (12 tests)
+│   ├── LeaderboardSystemTest.java   # Achievement/leaderboard tests (9 tests)
+│   ├── BulletTest.java              # Bullet behavior tests (12 tests)
+│   └── AsteroidTest.java            # Asteroid behavior tests (12 tests)
+├── docs/TESTING.md              # This documentation
+└── test.sh                      # Automated test runner script
 ```
 
 ### **Key Testing Components**
@@ -60,13 +66,13 @@ AIsteroids/
 ### **Prerequisites**
 ```bash
 # Ensure Java is installed and code is compiled
-javac *.java
+./build.sh
 ```
 
-### **Basic Test Suite**
+### **All Tests (Recommended)**
 ```bash
-# Run core functionality tests (16 tests)
-java -ea TestRunner
+# Run complete test suite (95+ tests)
+./test.sh
 ```
 
 **Expected Output:**
