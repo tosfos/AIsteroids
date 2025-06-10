@@ -14,7 +14,7 @@ public class PlayerShip extends GameObject {
     private boolean turnRight = false;
     private boolean accelerating = false;
     // Player lives.
-    private int lives = 3;
+    private int lives = GameConfig.PlayerShip.INITIAL_LIVES;
     // Invulnerability timer in seconds after being hit.
     private double invulnerabilityTimer = 0;
         // Engine trail particles
@@ -22,15 +22,15 @@ public class PlayerShip extends GameObject {
 
     // Power-up system
     private Map<PowerUp.PowerUpType, Double> activePowerUps;
-    private double fireRate = 10.0; // Base fire rate (shots per second) - much faster for better gameplay
+    private double fireRate = GameConfig.PlayerShip.FIRE_RATE; // Base fire rate (shots per second)
     private double lastFireTime = 0;
     private boolean hasShield = false;
     private double shieldTimer = 0;
 
     // Constants for rotation and acceleration.
-    private double rotationSpeed = Math.toRadians(180); // 180° per second.
-    private double acceleration = 200; // pixels per second^2.
-    private double maxSpeed = 300; // pixels per second.
+    private double rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
+    private double acceleration = GameConfig.PlayerShip.ACCELERATION; // pixels per second^2.
+    private double maxSpeed = GameConfig.PlayerShip.MAX_SPEED; // pixels per second.
 
     public PlayerShip(double x, double y) {
        super(x, y);
@@ -98,7 +98,9 @@ public class PlayerShip extends GameObject {
         // If invulnerable, make the ship blink by reducing opacity
         Composite oldComposite = g.getComposite();
         if (invulnerabilityTimer > 0) {
-            float alpha = (float)(0.3 + 0.7 * Math.abs(Math.sin(System.currentTimeMillis() * 0.02)));
+            float alpha = (float)(GameConfig.Effects.INVULNERABILITY_MIN_ALPHA +
+                (GameConfig.Effects.INVULNERABILITY_MAX_ALPHA - GameConfig.Effects.INVULNERABILITY_MIN_ALPHA) *
+                Math.abs(Math.sin(System.currentTimeMillis() * GameConfig.Effects.INVULNERABILITY_BLINK_SPEED)));
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
         }
 
@@ -275,8 +277,8 @@ public class PlayerShip extends GameObject {
             y = GameEngine.HEIGHT / 2;
             vx = 0;
             vy = 0;
-            // Set invulnerability period (2 seconds) to prevent immediate further damage
-            invulnerabilityTimer = 2.0;
+            // Set invulnerability period to prevent immediate further damage
+            invulnerabilityTimer = GameConfig.PlayerShip.INVULNERABILITY_TIME;
             // Play shield recharge sound when respawning
             SoundManager.playShieldRecharge();
 

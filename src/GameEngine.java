@@ -11,8 +11,8 @@ public class GameEngine implements Runnable {
     private List<GameObject> gameObjects;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 600;
+    public static final int WIDTH = GameConfig.SCREEN_WIDTH;
+    public static final int HEIGHT = GameConfig.SCREEN_HEIGHT;
 
     // Thread for running the game loop
     private Thread gameThread;
@@ -78,7 +78,7 @@ public class GameEngine implements Runnable {
         waveManagerExecutor.submit(() -> {
             while (waveManagerRunning.get() && !Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(3000); // Check every 3 seconds
+                    Thread.sleep(GameConfig.Threading.WAVE_MANAGER_CHECK_INTERVAL_MS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -121,7 +121,7 @@ public class GameEngine implements Runnable {
             if (waveManagerExecutor != null) {
                 waveManagerExecutor.shutdown();
                 try {
-                    if (!waveManagerExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                    if (!waveManagerExecutor.awaitTermination(GameConfig.Threading.THREAD_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                         waveManagerExecutor.shutdownNow();
                     }
                 } catch (InterruptedException e) {
@@ -166,7 +166,7 @@ public class GameEngine implements Runnable {
                 }
 
                 // Sleep briefly (approximate 60 FPS update rate)
-                Thread.sleep(16);
+                Thread.sleep(GameConfig.FRAME_TIME_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
