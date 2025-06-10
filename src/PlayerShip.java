@@ -22,7 +22,7 @@ public class PlayerShip extends GameObject {
 
     // Power-up system
     private Map<PowerUp.PowerUpType, Double> activePowerUps;
-    private double fireRate = 0.3; // Base fire rate (shots per second)
+    private double fireRate = 10.0; // Base fire rate (shots per second) - much faster for better gameplay
     private double lastFireTime = 0;
     private boolean hasShield = false;
     private double shieldTimer = 0;
@@ -36,6 +36,8 @@ public class PlayerShip extends GameObject {
        super(x, y);
        engineTrail = new ArrayList<>();
        activePowerUps = new HashMap<>();
+       // Initialize to allow immediate shooting
+       lastFireTime = 1.0;
     }
 
     @Override
@@ -433,6 +435,8 @@ public class PlayerShip extends GameObject {
         // Reset lives and invulnerability
         lives = 3;
         invulnerabilityTimer = 0;
+        // Allow immediate shooting after reset
+        lastFireTime = 1.0;
         // Clear engine trail
         engineTrail.clear();
         // Ensure alive
