@@ -14,19 +14,44 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "Running basic test suite..."
-java -ea -cp bin:lib/* TestRunner
+echo "Running integration test suite..."
+java -ea -cp bin:lib/* IntegrationTestSuite
 
 if [ $? -ne 0 ]; then
-    echo "Basic tests failed!"
+    echo "Integration tests failed!"
     exit 1
 fi
 
-echo "Running advanced test suite..."
-java -ea -cp bin:lib/* AdvancedTestRunner
+echo "Running edge case test suite..."
+java -ea -cp bin:lib/* EdgeCaseTestSuite
 
 if [ $? -ne 0 ]; then
-    echo "Advanced tests failed!"
+    echo "Edge case tests failed!"
+    exit 1
+fi
+
+echo "Running focused component tests..."
+java -ea -cp bin:lib/* ScoreCalculatorTest
+if [ $? -ne 0 ]; then
+    echo "ScoreCalculator tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* CollisionTest
+if [ $? -ne 0 ]; then
+    echo "Collision tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* PowerUpTest
+if [ $? -ne 0 ]; then
+    echo "PowerUp tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* WaveSystemTest
+if [ $? -ne 0 ]; then
+    echo "WaveSystem tests failed!"
     exit 1
 fi
 

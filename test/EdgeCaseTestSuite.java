@@ -1,12 +1,12 @@
 import java.awt.Rectangle;
 
-public class AdvancedTestRunner {
+public class EdgeCaseTestSuite {
 
     private int testsRun = 0;
     private int testsPassed = 0;
 
     public static void main(String[] args) {
-        AdvancedTestRunner runner = new AdvancedTestRunner();
+        EdgeCaseTestSuite runner = new EdgeCaseTestSuite();
         runner.runAllTests();
     }
 

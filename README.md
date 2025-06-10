@@ -126,15 +126,23 @@ This project features a comprehensive test suite with **43 automated tests** cov
 
 ### **Quick Test Commands**
 ```bash
-# Build and run basic test suite
+# Run all tests with test script
+./test.sh
+
+# Or run test suites individually:
 javac -d bin -cp "lib/*" src/*.java test/*.java
-java -ea -cp bin:lib/* TestRunner
 
-# Run advanced test suite
-java -ea -cp bin:lib/* AdvancedTestRunner
+# Integration tests (multi-system testing)
+java -ea -cp bin:lib/* IntegrationTestSuite
 
-# Run full test suite
-java -ea -cp bin:lib/* TestRunner && java -ea -cp bin:lib/* AdvancedTestRunner
+# Edge case tests (robustness testing)
+java -ea -cp bin:lib/* EdgeCaseTestSuite
+
+# Focused component tests
+java -ea -cp bin:lib/* ScoreCalculatorTest
+java -ea -cp bin:lib/* CollisionTest
+java -ea -cp bin:lib/* PowerUpTest
+java -ea -cp bin:lib/* WaveSystemTest
 ```
 
 📚 **[Complete Testing Guide →](TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.

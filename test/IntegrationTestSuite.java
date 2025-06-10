@@ -1,10 +1,10 @@
-public class TestRunner {
+public class IntegrationTestSuite {
 
     private int testsRun = 0;
     private int testsPassed = 0;
 
     public static void main(String[] args) {
-        TestRunner runner = new TestRunner();
+        IntegrationTestSuite runner = new IntegrationTestSuite();
         runner.runAllTests();
     }
 
