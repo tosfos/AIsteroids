@@ -13,6 +13,9 @@
 - **Visual Effects:** Pulsing glow effects with type indicators
 - **Timed Effects:** Power-ups with specific durations and stacking capabilities
 - **Collection Mechanics:** Collision-based pickup system with audio feedback
+- **HUD Integration:** Real-time status indicators with countdown timers
+
+📚 **[Complete Power-Up Guide →](docs/POWER-UPS.md)** - Detailed documentation with strategies, combinations, and technical details.
 
 ### 🎆 **Cinematic Particle System**
 - **Explosion Effects:** Multi-layered particles with shockwaves and debris

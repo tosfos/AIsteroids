@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Collections;
@@ -19,6 +20,15 @@ public class GamePanel extends JPanel implements KeyListener {
     private Font hudFont;
     private Font titleFont;
     private Font subtitleFont;
+
+    // Power-up message system
+    private String powerUpMessage = "";
+    private double powerUpMessageTimer = 0;
+    private static final double POWER_UP_MESSAGE_DURATION = 3.0; // 3 seconds
+    private Font powerUpMessageFont;
+
+    // Help system
+    private boolean showingHelp = false;
 
     public GamePanel(GameEngine engine) {
        this.engine = engine;
@@ -43,11 +53,13 @@ public class GamePanel extends JPanel implements KeyListener {
            hudFont = new Font("Orbitron", Font.BOLD, 16);
            titleFont = new Font("Orbitron", Font.BOLD, 48);
            subtitleFont = new Font("Orbitron", Font.PLAIN, 24);
+           powerUpMessageFont = new Font("Orbitron", Font.BOLD, 20);
        } catch (Exception e) {
            // Fallback fonts
            hudFont = new Font("Arial", Font.BOLD, 16);
            titleFont = new Font("Arial", Font.BOLD, 48);
            subtitleFont = new Font("Arial", Font.PLAIN, 24);
+           powerUpMessageFont = new Font("Arial", Font.BOLD, 20);
        }
 
        setFocusable(true);
@@ -99,6 +111,14 @@ public class GamePanel extends JPanel implements KeyListener {
         particleSystem.update(1.0/60.0);
         particleSystem.draw(g2d);
 
+        // Update power-up message timer
+        if (powerUpMessageTimer > 0) {
+            powerUpMessageTimer -= 1.0/60.0;
+            if (powerUpMessageTimer <= 0) {
+                powerUpMessage = "";
+            }
+        }
+
         // Draw all game objects with enhanced effects
         drawGameObjects(g2d);
     }
@@ -112,6 +132,14 @@ public class GamePanel extends JPanel implements KeyListener {
     private void drawUI(Graphics2D g2d) {
         // Draw enhanced UI
         drawEnhancedHUD(g2d);
+
+        // Draw power-up message if active
+        drawPowerUpMessage(g2d);
+
+        // Draw help overlay if active
+        if (showingHelp) {
+            drawHelpOverlay(g2d);
+        }
 
         // If game is over, draw the enhanced game over screen
         if (engine.isGameOver()) {
@@ -232,10 +260,209 @@ public class GamePanel extends JPanel implements KeyListener {
             g.setFont(hudFont); // Reset font
         }
 
+        // Power-up status indicators
+        drawPowerUpStatusIcons(g);
+
         // Add a subtle border effect
         g.setColor(new Color(0, 255, 255, 50));
         g.setStroke(new BasicStroke(2));
-        g.drawRect(5, 5, 250, 50);
+        g.drawRect(5, 5, 250, 125);
+    }
+
+    private void drawPowerUpMessage(Graphics2D g) {
+        if (powerUpMessage.isEmpty() || powerUpMessageTimer <= 0) {
+            return;
+        }
+
+        g.setFont(powerUpMessageFont);
+        FontMetrics fm = g.getFontMetrics();
+
+        // Position message in center-top area
+        int x = (getWidth() - fm.stringWidth(powerUpMessage)) / 2;
+        int y = 150;
+
+        // Calculate fade effect for last second
+        float alpha = 1.0f;
+        if (powerUpMessageTimer < 1.0) {
+            alpha = (float) powerUpMessageTimer;
+        }
+
+        // Draw glow effect
+        Color glowColor = new Color(255, 255, 0, (int)(100 * alpha));
+        drawGlowText(g, powerUpMessage, x, y, new Color(255, 255, 0, (int)(255 * alpha)), glowColor);
+    }
+
+    public void showPowerUpMessage(PowerUp.PowerUpType powerUpType) {
+        switch (powerUpType) {
+            case RAPID_FIRE:
+                powerUpMessage = "RAPID FIRE ACTIVATED!";
+                break;
+            case SPREAD_SHOT:
+                powerUpMessage = "SPREAD SHOT ACTIVATED!";
+                break;
+            case SHIELD:
+                powerUpMessage = "SHIELD ACTIVATED!";
+                break;
+            case SPEED_BOOST:
+                powerUpMessage = "SPEED BOOST ACTIVATED!";
+                break;
+            case MULTI_SHOT:
+                powerUpMessage = "MULTI SHOT ACTIVATED!";
+                break;
+            case LASER_BEAM:
+                powerUpMessage = "LASER BEAM ACTIVATED!";
+                break;
+            default:
+                powerUpMessage = "POWER-UP ACTIVATED!";
+                break;
+        }
+        powerUpMessageTimer = POWER_UP_MESSAGE_DURATION;
+    }
+
+    private void drawPowerUpStatusIcons(Graphics2D g) {
+        Map<PowerUp.PowerUpType, Double> activePowerUps = player.getActivePowerUps();
+        if (activePowerUps.isEmpty()) {
+            return;
+        }
+
+        // Power-up status label
+        g.setFont(hudFont);
+        g.setColor(new Color(255, 255, 255, 200));
+        g.drawString("POWER-UPS:", 10, 125);
+
+        int iconX = 10;
+        int iconY = 135;
+        int iconSize = 20;
+        int iconSpacing = 25;
+
+        for (Map.Entry<PowerUp.PowerUpType, Double> entry : activePowerUps.entrySet()) {
+            PowerUp.PowerUpType type = entry.getKey();
+            double timeRemaining = entry.getValue();
+            double totalDuration = type.getDuration();
+
+            // Calculate fade based on remaining time
+            float progress = (float) (timeRemaining / totalDuration);
+            float alpha = Math.max(0.3f, progress); // Minimum 30% alpha so it's still visible
+
+            // Draw icon background circle
+            Color iconColor = type.getColor();
+            Color fadedColor = new Color(iconColor.getRed(), iconColor.getGreen(),
+                                       iconColor.getBlue(), (int)(255 * alpha));
+            g.setColor(fadedColor);
+            g.fillOval(iconX, iconY, iconSize, iconSize);
+
+            // Draw glow effect
+            Color glowColor = new Color(iconColor.getRed(), iconColor.getGreen(),
+                                      iconColor.getBlue(), (int)(100 * alpha));
+            g.setColor(glowColor);
+            g.fillOval(iconX - 2, iconY - 2, iconSize + 4, iconSize + 4);
+            g.setColor(fadedColor);
+            g.fillOval(iconX, iconY, iconSize, iconSize);
+
+            // Draw icon symbol
+            g.setColor(new Color(0, 0, 0, (int)(255 * alpha)));
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            FontMetrics fm = g.getFontMetrics();
+            String symbol = getPowerUpSymbol(type);
+            int symbolWidth = fm.stringWidth(symbol);
+            int symbolHeight = fm.getAscent();
+            g.drawString(symbol,
+                iconX + (iconSize - symbolWidth) / 2,
+                iconY + (iconSize + symbolHeight) / 2 - 2);
+
+            // Draw progress ring
+            drawProgressRing(g, iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 3, progress, fadedColor);
+
+            iconX += iconSpacing;
+        }
+    }
+
+    private void drawProgressRing(Graphics2D g, int centerX, int centerY, int radius, float progress, Color color) {
+        g.setStroke(new BasicStroke(2));
+        g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
+
+        // Full circle background
+        g.drawOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
+
+        // Progress arc
+        g.setColor(color);
+        int startAngle = 90; // Start at top
+        int arcAngle = (int) (360 * progress);
+        g.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, startAngle, arcAngle);
+    }
+
+    private String getPowerUpSymbol(PowerUp.PowerUpType type) {
+        switch (type) {
+            case RAPID_FIRE: return "R";
+            case SPREAD_SHOT: return "S";
+            case SHIELD: return "♦";
+            case SPEED_BOOST: return "»";
+            case MULTI_SHOT: return "M";
+            case LASER_BEAM: return "L";
+            default: return "?";
+        }
+    }
+
+    private void drawHelpOverlay(Graphics2D g) {
+        // Semi-transparent background
+        g.setColor(new Color(0, 0, 0, 180));
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        // Help title
+        g.setFont(titleFont);
+        g.setColor(Color.WHITE);
+        String title = "POWER-UP GUIDE";
+        FontMetrics fm = g.getFontMetrics();
+        int x = (getWidth() - fm.stringWidth(title)) / 2;
+        g.drawString(title, x, 80);
+
+        // Power-up information
+        g.setFont(hudFont);
+        String[] helpLines = {
+            "🟠 RAPID FIRE (R) - Triples firing rate for 10s",
+            "🔵 SPREAD SHOT (S) - 3 bullets in spread for 8s",
+            "🟢 SHIELD (♦) - Invulnerability for 12s",
+            "🟡 SPEED BOOST (») - Enhanced speed for 6s",
+            "🟣 MULTI SHOT (M) - 5 bullets in spread for 15s",
+            "🔴 LASER BEAM (L) - Future weapon for 20s",
+            "",
+            "💡 TIPS:",
+            "• Power-ups stack together for combos",
+            "• HUD shows active power-ups with timers",
+            "• Collect power-ups before they fade away",
+            "• Use Shield + Rapid Fire for safe aggression",
+            "",
+            "CONTROLS:",
+            "←/→ Rotate   ↑ Thrust   SPACE Fire   H Help"
+        };
+
+        int startY = 130;
+        for (int i = 0; i < helpLines.length; i++) {
+            if (helpLines[i].startsWith("🟠") || helpLines[i].startsWith("🔵") ||
+                helpLines[i].startsWith("🟢") || helpLines[i].startsWith("🟡") ||
+                helpLines[i].startsWith("🟣") || helpLines[i].startsWith("🔴")) {
+                // Color-code power-up lines
+                g.setColor(Color.YELLOW);
+            } else if (helpLines[i].startsWith("💡") || helpLines[i].startsWith("CONTROLS:")) {
+                g.setColor(Color.CYAN);
+            } else if (helpLines[i].startsWith("•")) {
+                g.setColor(new Color(200, 200, 200));
+            } else {
+                g.setColor(Color.WHITE);
+            }
+
+            fm = g.getFontMetrics();
+            int lineX = (getWidth() - fm.stringWidth(helpLines[i])) / 2;
+            g.drawString(helpLines[i], lineX, startY + i * 20);
+        }
+
+        // Close instruction
+        g.setFont(powerUpMessageFont);
+        g.setColor(Color.YELLOW);
+        String closeMsg = "Press H to close help";
+        fm = g.getFontMetrics();
+        x = (getWidth() - fm.stringWidth(closeMsg)) / 2;
+        g.drawString(closeMsg, x, getHeight() - 50);
     }
 
     private void drawMiniShip(Graphics2D g, int x, int y) {
@@ -365,20 +592,26 @@ public class GamePanel extends JPanel implements KeyListener {
         // Normal gameplay controls
         switch (key) {
             case KeyEvent.VK_LEFT:
-                player.setTurnLeft(true);
+                if (!showingHelp) player.setTurnLeft(true);
                 break;
             case KeyEvent.VK_RIGHT:
-                player.setTurnRight(true);
+                if (!showingHelp) player.setTurnRight(true);
                 break;
             case KeyEvent.VK_UP:
-                player.setAccelerating(true);
+                if (!showingHelp) player.setAccelerating(true);
                 break;
             case KeyEvent.VK_SPACE:
-                // Fire a bullet from the player's ship.
-                List<Bullet> bullets = player.fireBullet();
-                for (Bullet bullet : bullets) {
-                    engine.addGameObject(bullet);
+                if (!showingHelp) {
+                    // Fire a bullet from the player's ship.
+                    List<Bullet> bullets = player.fireBullet();
+                    for (Bullet bullet : bullets) {
+                        engine.addGameObject(bullet);
+                    }
                 }
+                break;
+            case KeyEvent.VK_H:
+                // Toggle help overlay
+                showingHelp = !showingHelp;
                 break;
         }
     }
