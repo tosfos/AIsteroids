@@ -103,6 +103,29 @@ javac *.java
 java Main
 ```
 
+## 🧪 **Testing**
+
+This project features a comprehensive test suite with **43 automated tests** covering all game systems:
+
+- **Test Coverage**: 8 major game systems with unit, integration, and edge case tests
+- **Test Runners**: Basic (16 tests) + Advanced (27 tests) test suites
+- **Success Rate**: 100% - All tests pass
+- **Zero Dependencies**: Pure Java testing framework
+
+### **Quick Test Commands**
+```bash
+# Run basic test suite
+java -ea TestRunner
+
+# Run advanced test suite
+java -ea AdvancedTestRunner
+
+# Run full test suite
+java -ea TestRunner && java -ea AdvancedTestRunner
+```
+
+📚 **[Complete Testing Guide →](TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.
+
 ## 🏅 **Achievement Guide**
 
 | Achievement | Description | Requirement |
