@@ -97,10 +97,22 @@
 # Clone and compile
 git clone <repository-url>
 cd AIsteroids
-javac *.java
+./build.sh
 
 # Run the game
-java Main
+java -cp bin:lib/* Main
+```
+
+### **Manual Build**
+```bash
+# Create build directory
+mkdir -p bin
+
+# Compile source files
+javac -d bin -cp "lib/*" src/*.java
+
+# Run the game
+java -cp bin:lib/* Main
 ```
 
 ## 🧪 **Testing**
@@ -114,14 +126,15 @@ This project features a comprehensive test suite with **43 automated tests** cov
 
 ### **Quick Test Commands**
 ```bash
-# Run basic test suite
-java -ea TestRunner
+# Build and run basic test suite
+javac -d bin -cp "lib/*" src/*.java test/*.java
+java -ea -cp bin:lib/* TestRunner
 
 # Run advanced test suite
-java -ea AdvancedTestRunner
+java -ea -cp bin:lib/* AdvancedTestRunner
 
 # Run full test suite
-java -ea TestRunner && java -ea AdvancedTestRunner
+java -ea -cp bin:lib/* TestRunner && java -ea -cp bin:lib/* AdvancedTestRunner
 ```
 
 📚 **[Complete Testing Guide →](TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.
