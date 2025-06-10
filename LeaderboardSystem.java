@@ -202,7 +202,9 @@ public class LeaderboardSystem {
 
     private static void loadLeaderboard() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(LEADERBOARD_FILE))) {
-            leaderboard = (List<LeaderboardEntry>) ois.readObject();
+            @SuppressWarnings("unchecked")
+            List<LeaderboardEntry> loadedLeaderboard = (List<LeaderboardEntry>) ois.readObject();
+            leaderboard = loadedLeaderboard;
         } catch (Exception e) {
             leaderboard = new ArrayList<>();
         }
@@ -218,8 +220,12 @@ public class LeaderboardSystem {
 
     private static void loadAchievements() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ACHIEVEMENTS_FILE))) {
-            unlockedAchievements = (Set<Achievement>) ois.readObject();
-            gameStats = (Map<String, Integer>) ois.readObject();
+            @SuppressWarnings("unchecked")
+            Set<Achievement> loadedAchievements = (Set<Achievement>) ois.readObject();
+            @SuppressWarnings("unchecked")
+            Map<String, Integer> loadedStats = (Map<String, Integer>) ois.readObject();
+            unlockedAchievements = loadedAchievements;
+            gameStats = loadedStats;
         } catch (Exception e) {
             unlockedAchievements = new HashSet<>();
             gameStats = new HashMap<>();
