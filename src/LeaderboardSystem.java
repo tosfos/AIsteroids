@@ -89,7 +89,7 @@ public class LeaderboardSystem {
 
         // Keep only top entries
         if (leaderboard.size() > MAX_LEADERBOARD_ENTRIES) {
-            leaderboard = leaderboard.subList(0, MAX_LEADERBOARD_ENTRIES);
+            leaderboard = new ArrayList<>(leaderboard.subList(0, MAX_LEADERBOARD_ENTRIES));
         }
 
         saveLeaderboard();
