@@ -4,12 +4,15 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.Collections;
 
 public class GamePanel extends JPanel implements KeyListener {
     private GameEngine engine;
     private PlayerShip player;
     private List<Star> stars;
     private List<Particle> particles;
+    private ParticleSystem particleSystem;
     private Random rand = new Random();
 
     // UI enhancement variables
@@ -25,6 +28,12 @@ public class GamePanel extends JPanel implements KeyListener {
 
        // Initialize starfield
        initializeStarfield();
+
+       // Initialize particle system
+       particleSystem = new ParticleSystem();
+
+       // Set reference in engine for particle effects
+       engine.setGamePanel(this);
 
        // Initialize particle system
        particles = new ArrayList<>();
@@ -78,6 +87,10 @@ public class GamePanel extends JPanel implements KeyListener {
        // Draw particle effects
        updateAndDrawParticles(g2d);
 
+       // Update and draw enhanced particle system
+       particleSystem.update(1.0/60.0);
+       particleSystem.draw(g2d);
+
        // Draw all game objects with enhanced effects
        for (GameObject obj : engine.getGameObjects()) {
             obj.draw(g2d);
@@ -122,6 +135,44 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
+    public ParticleSystem getParticleSystem() {
+        return particleSystem;
+    }
+
+    private void showLeaderboard() {
+        // Create and show leaderboard dialog
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append("=== LEADERBOARD ===\n\n");
+
+            List<LeaderboardSystem.LeaderboardEntry> entries = LeaderboardSystem.getLeaderboard();
+            if (entries.isEmpty()) {
+                sb.append("No scores yet!\n");
+            } else {
+                for (int i = 0; i < entries.size(); i++) {
+                    LeaderboardSystem.LeaderboardEntry entry = entries.get(i);
+                    sb.append(String.format("%d. %s - %,d pts (Wave %d) - %s\n",
+                        i + 1, entry.playerName, entry.score, entry.wave, entry.date));
+                }
+            }
+
+            sb.append("\n=== ACHIEVEMENTS ===\n\n");
+            Set<LeaderboardSystem.Achievement> unlocked = LeaderboardSystem.getUnlockedAchievements();
+            sb.append("Unlocked: " + unlocked.size() + "/" + LeaderboardSystem.Achievement.values().length + "\n\n");
+
+            for (LeaderboardSystem.Achievement achievement : LeaderboardSystem.Achievement.values()) {
+                if (LeaderboardSystem.isAchievementUnlocked(achievement)) {
+                    sb.append("★ " + achievement.getName() + " - " + achievement.getDescription() + "\n");
+                } else {
+                    sb.append("☐ " + achievement.getName() + " - " + achievement.getDescription() + "\n");
+                }
+            }
+
+            javax.swing.JOptionPane.showMessageDialog(this, sb.toString(), "Leaderboard & Achievements",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        });
+    }
+
     private void drawEnhancedHUD(Graphics2D g) {
         // Create a subtle glow effect for the HUD
         g.setFont(hudFont);
@@ -137,6 +188,31 @@ public class GamePanel extends JPanel implements KeyListener {
         // Score with glow effect
         String scoreText = "SCORE: " + String.format("%06d", engine.getScore());
         drawGlowText(g, scoreText, 10, 50, new Color(255, 255, 0), new Color(255, 255, 0, 100));
+
+        // Wave information
+        WaveSystem waveSystem = engine.getWaveSystem();
+        String waveText = "WAVE: " + waveSystem.getCurrentWave();
+        if (waveSystem.isBossWave()) {
+            waveText += " [BOSS]";
+            g.setColor(new Color(255, 100, 100, 200));
+        } else {
+            g.setColor(new Color(100, 255, 100, 200));
+        }
+        g.drawString(waveText, 10, 75);
+
+        // Asteroids remaining
+        String asteroidsText = "ASTEROIDS: " + waveSystem.getAsteroidsRemaining();
+        g.setColor(new Color(255, 255, 255, 200));
+        g.drawString(asteroidsText, 10, 100);
+
+        // Score multiplier indicator
+        if (waveSystem.getScoreMultiplier() > 1) {
+            String multiplierText = "x" + waveSystem.getScoreMultiplier();
+            g.setColor(new Color(255, 255, 0, 255));
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString(multiplierText, engine.getScore() > 0 ? 200 : 150, 50);
+            g.setFont(hudFont); // Reset font
+        }
 
         // Add a subtle border effect
         g.setColor(new Color(0, 255, 255, 50));
@@ -206,12 +282,23 @@ public class GamePanel extends JPanel implements KeyListener {
         y = getHeight() / 2 - 10;
         drawGlowText(g, finalScore, x, y, Color.YELLOW, new Color(255, 255, 0, 100));
 
+        // Wave reached
+        String waveText = "WAVE REACHED: " + engine.getWaveSystem().getCurrentWave();
+        fm = g.getFontMetrics();
+        x = (getWidth() - fm.stringWidth(waveText)) / 2;
+        y = getHeight() / 2 + 20;
+        g.setColor(new Color(100, 255, 100, 200));
+        g.drawString(waveText, x, y);
+
+        // Recent achievements
+        drawRecentAchievements(g);
+
         // Restart instruction with pulsing effect
         g.setFont(hudFont);
-        String restart = "PRESS [N] FOR NEW GAME";
+        String restart = "PRESS [N] FOR NEW GAME  [L] FOR LEADERBOARD";
         fm = g.getFontMetrics();
         x = (getWidth() - fm.stringWidth(restart)) / 2;
-        y = getHeight() / 2 + 60;
+        y = getHeight() / 2 + 100;
 
         float pulseAlpha = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() * 0.01);
         int restartAlpha = Math.max(0, Math.min(255, (int)(255 * pulseAlpha)));
@@ -219,15 +306,40 @@ public class GamePanel extends JPanel implements KeyListener {
         g.drawString(restart, x, y);
     }
 
+    private void drawRecentAchievements(Graphics2D g) {
+        // Show last 3 unlocked achievements
+        Set<LeaderboardSystem.Achievement> unlocked = LeaderboardSystem.getUnlockedAchievements();
+        if (unlocked.isEmpty()) return;
+
+        List<LeaderboardSystem.Achievement> recentAchievements = new ArrayList<>(unlocked);
+        Collections.reverse(recentAchievements); // Show most recent first
+
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.setColor(new Color(255, 215, 0, 180)); // Gold color
+
+        int startY = getHeight() / 2 + 50;
+        int count = 0;
+        for (LeaderboardSystem.Achievement achievement : recentAchievements) {
+            if (count >= 3) break; // Show only last 3
+            String text = "★ " + achievement.getName();
+            FontMetrics fm = g.getFontMetrics();
+            int x = (getWidth() - fm.stringWidth(text)) / 2;
+            g.drawString(text, x, startY + count * 15);
+            count++;
+        }
+    }
+
     // KeyListener events for controlling the player ship.
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
 
-        // If game is over, only respond to N for new game
+        // If game is over, only respond to N for new game and L for leaderboard
         if (engine.isGameOver()) {
             if (key == KeyEvent.VK_N) {
                 engine.restart();
+            } else if (key == KeyEvent.VK_L) {
+                showLeaderboard();
             }
             return;
         }
@@ -245,7 +357,10 @@ public class GamePanel extends JPanel implements KeyListener {
                 break;
             case KeyEvent.VK_SPACE:
                 // Fire a bullet from the player's ship.
-                engine.addGameObject(player.fireBullet());
+                List<Bullet> bullets = player.fireBullet();
+                for (Bullet bullet : bullets) {
+                    engine.addGameObject(bullet);
+                }
                 break;
         }
     }

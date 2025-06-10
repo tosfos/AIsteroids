@@ -129,6 +129,11 @@ public class Asteroid extends GameObject {
        return new Rectangle((int)(x - radius), (int)(y - radius), (int)(radius * 2), (int)(radius * 2));
     }
 
+    @Override
+    public double getRadius() {
+        return radius;
+    }
+
     // Called when the asteroid is hit by a bullet.
     public void hit(GameEngine engine) {
        SoundManager.playExplosion();
@@ -150,20 +155,37 @@ public class Asteroid extends GameObject {
           engine.addGameObject(new Asteroid(x, y, size - 1,
               newSpeed2 * Math.cos(angle2), newSpeed2 * Math.sin(angle2)));
 
-          // Award points based on asteroid size
-          engine.addScore(size * 100);
+                 // Award points based on asteroid size with wave multiplier
+       int basePoints = size * 100;
+       int multipliedPoints = basePoints * engine.getWaveSystem().getScoreMultiplier();
+       engine.addScore(multipliedPoints);
+
+       // Notify wave system of asteroid destruction
+       engine.getWaveSystem().asteroidDestroyed();
+
+       // Track achievement progress
+       LeaderboardSystem.asteroidDestroyed();
        } else {
-          // Small asteroids worth 100 points
-          engine.addScore(100);
+          // Small asteroids worth 100 points with wave multiplier
+          int multipliedPoints = 100 * engine.getWaveSystem().getScoreMultiplier();
+          engine.addScore(multipliedPoints);
+
+          // Notify wave system of asteroid destruction
+          engine.getWaveSystem().asteroidDestroyed();
+
+          // Track achievement progress
+          LeaderboardSystem.asteroidDestroyed();
        }
        // Mark this asteroid as destroyed.
-       alive = false;
+       active = false;
     }
 
     private void triggerExplosionEffect(GameEngine engine) {
-        // This method would be called to create explosion particles
-        // For now, we'll leave it as a placeholder since we need to
-        // coordinate with the GamePanel's particle system
+        // Create explosion particles through the engine
+        engine.createExplosionEffect(x, y, size);
+
+        // Create debris when asteroid breaks apart
+        engine.createDebrisEffect(x, y, size * 3);
     }
 
     // Factory method to create a random asteroid.

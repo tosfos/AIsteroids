@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class GameEngine implements Runnable {
     // List of active game objects (player, asteroids, bullets)
@@ -17,6 +18,12 @@ public class GameEngine implements Runnable {
     // Keep a reference to the player ship.
     private PlayerShip player;
 
+        // Reference to game panel for particle effects
+    private GamePanel gamePanel;
+
+    // Wave system for progressive difficulty
+    private WaveSystem waveSystem;
+
     private int score = 0;
     private boolean gameOver = false;
 
@@ -26,27 +33,42 @@ public class GameEngine implements Runnable {
        // Start ambient space sound
        SoundManager.startAmbientSpace();
 
+              // Start dynamic music
+       MusicSystem.startMusic();
+
+       // Initialize wave system
+       waveSystem = new WaveSystem();
+
+       // Track game start
+       LeaderboardSystem.gameStarted();
+
        // Create player ship at center.
        player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
        addGameObject(player);
 
-       // Spawn a few initial asteroids.
-       for (int i = 0; i < 5; i++) {
-          addGameObject(Asteroid.createRandomAsteroid(WIDTH, HEIGHT, 3)); // size 3 represents a large asteroid.
-       }
+       // Spawn initial wave of asteroids based on wave system
+       spawnWaveAsteroids();
 
-       // Start a separate thread to periodically spawn new asteroids.
+              // Start a separate thread to periodically spawn power-ups and check wave completion
        new Thread(() -> {
          while (true) {
            try {
-             Thread.sleep(5000); // Every 5 seconds, add a new asteroid.
+             Thread.sleep(3000); // Check every 3 seconds
            } catch (InterruptedException e) {
              Thread.currentThread().interrupt();
              break;
            }
-           addGameObject(Asteroid.createRandomAsteroid(WIDTH, HEIGHT, 3));
+
+           // Spawn power-ups based on wave system
+           WaveSystem.PowerUpSpawnInfo powerUpInfo = waveSystem.getPowerUpSpawnInfo();
+           if (Math.random() < powerUpInfo.spawnChance) {
+             addGameObject(PowerUp.createRandomPowerUp(WIDTH, HEIGHT));
+           }
+
+           // Check if we need to spawn more asteroids for current wave
+           checkAndSpawnAsteroids();
          }
-       }, "AsteroidSpawner").start();
+       }, "WaveManager").start();
     }
 
     public void start() {
@@ -72,6 +94,11 @@ public class GameEngine implements Runnable {
                 gameOver = true;
                 SoundManager.playGameOver(); // Play game over sound
                 SoundManager.stopAmbientSpace(); // Stop ambient sound
+                MusicSystem.stopMusic(); // Stop dynamic music
+
+                // Record final stats and add to leaderboard
+                LeaderboardSystem.gameEnded(score, waveSystem.getCurrentWave());
+                LeaderboardSystem.addScore(LeaderboardSystem.getPlayerName(), score, waveSystem.getCurrentWave());
             }
 
             // Sleep briefly (approximate 60 FPS update rate)
@@ -88,6 +115,9 @@ public class GameEngine implements Runnable {
         if (gameOver) {
             return;
         }
+
+        // Update dynamic music intensity based on game state
+        updateMusicIntensity();
 
         synchronized(lock) {
             // Update every game object.
@@ -124,19 +154,79 @@ public class GameEngine implements Runnable {
         private void handleCollision(GameObject a, GameObject b) {
          // Bullet hits asteroid.
          if (a instanceof Bullet && b instanceof Asteroid) {
-             ((Bullet) a).setAlive(false);
-             ((Asteroid) b).hit(this); // Asteroid may split or get destroyed.
+             Bullet bullet = (Bullet) a;
+             Asteroid asteroid = (Asteroid) b;
+             bullet.setAlive(false);
+
+             // Create impact sparks
+             double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
+                                           asteroid.getX() - bullet.getX());
+             createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
+
+             asteroid.hit(this); // Asteroid may split or get destroyed.
              SoundManager.playAsteroidHit(); // Play impact sound
          } else if (b instanceof Bullet && a instanceof Asteroid) {
-             ((Bullet) b).setAlive(false);
-             ((Asteroid) a).hit(this);
+             Bullet bullet = (Bullet) b;
+             Asteroid asteroid = (Asteroid) a;
+             bullet.setAlive(false);
+
+             // Create impact sparks
+             double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
+                                           asteroid.getX() - bullet.getX());
+             createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
+
+             asteroid.hit(this);
              SoundManager.playAsteroidHit(); // Play impact sound
          }
-         // Player ship colliding with an asteroid.
+                           // Player ship colliding with an asteroid.
          else if (a instanceof PlayerShip && b instanceof Asteroid) {
-            ((PlayerShip)a).damage();
+            PlayerShip ship = (PlayerShip)a;
+            if (!ship.hasShield()) {
+                double oldX = ship.getX();
+                double oldY = ship.getY();
+                ship.damage();
+
+                // Notify wave system of damage
+                waveSystem.playerDamaged();
+
+                if (ship.isAlive()) {
+                    // Create warp effect at old position
+                    createWarpEffect(oldX, oldY);
+                    // Create warp effect at new position
+                    createWarpEffect(ship.getX(), ship.getY());
+                }
+            } else {
+                // Shield blocked the hit
+                LeaderboardSystem.shieldBlocked();
+            }
          } else if (b instanceof PlayerShip && a instanceof Asteroid) {
-            ((PlayerShip)b).damage();
+            PlayerShip ship = (PlayerShip)b;
+            if (!ship.hasShield()) {
+                double oldX = ship.getX();
+                double oldY = ship.getY();
+                ship.damage();
+
+                // Notify wave system of damage
+                waveSystem.playerDamaged();
+
+                if (ship.isAlive()) {
+                    // Create warp effect at old position
+                    createWarpEffect(oldX, oldY);
+                    // Create warp effect at new position
+                    createWarpEffect(ship.getX(), ship.getY());
+                }
+            } else {
+                // Shield blocked the hit
+                LeaderboardSystem.shieldBlocked();
+            }
+          }
+         // Player ship colliding with power-up.
+         else if (a instanceof PlayerShip && b instanceof PowerUp) {
+            ((PlayerShip)a).addPowerUp(((PowerUp)b).getType());
+            ((PowerUp)b).setAlive(false);
+         } else if (b instanceof PlayerShip && a instanceof PowerUp) {
+            ((PlayerShip)b).addPowerUp(((PowerUp)a).getType());
+            ((PowerUp)a).setAlive(false);
          }
     }
 
@@ -169,7 +259,7 @@ public class GameEngine implements Runnable {
         return gameOver;
     }
 
-        public void restart() {
+            public void restart() {
         synchronized(lock) {
             // Clear all existing objects
             gameObjects.clear();
@@ -177,20 +267,126 @@ public class GameEngine implements Runnable {
             // Reset score
             score = 0;
 
-            // Reset existing player ship
+                        // Reset existing player ship
             player.reset();
             addGameObject(player);
 
-            // Spawn initial asteroids
-            for (int i = 0; i < 5; i++) {
-                addGameObject(Asteroid.createRandomAsteroid(WIDTH, HEIGHT, 3));
-            }
+            // Reset wave system
+            waveSystem.reset();
+
+            // Spawn initial wave asteroids
+            spawnWaveAsteroids();
 
             // Reset game over flag
             gameOver = false;
 
             // Restart ambient sound
             SoundManager.startAmbientSpace();
+
+            // Restart dynamic music
+            MusicSystem.startMusic();
+
+            // Clear particle effects
+            if (gamePanel != null) {
+                gamePanel.getParticleSystem().clear();
+            }
         }
+    }
+
+    public void setGamePanel(GamePanel panel) {
+        this.gamePanel = panel;
+    }
+
+    public void createExplosionEffect(double x, double y, int intensity) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createExplosion(x, y, intensity);
+        }
+    }
+
+    public void createDebrisEffect(double x, double y, int count) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createDebris(x, y, count);
+        }
+    }
+
+    public void createWarpEffect(double x, double y) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createWarpEffect(x, y);
+        }
+    }
+
+    public void createImpactSparks(double x, double y, double angle) {
+        if (gamePanel != null) {
+            gamePanel.getParticleSystem().createImpactSparks(x, y, angle);
+        }
+    }
+
+        private void updateMusicIntensity() {
+        // Count asteroids
+        int asteroidCount = 0;
+        boolean hasPowerUp = false;
+
+        synchronized(lock) {
+            for (GameObject obj : gameObjects) {
+                if (obj instanceof Asteroid) {
+                    asteroidCount++;
+                }
+            }
+            hasPowerUp = !player.getActivePowerUps().isEmpty();
+        }
+
+        MusicSystem.updateMusicIntensity(asteroidCount, player.getLives(), hasPowerUp);
+    }
+
+    private void spawnWaveAsteroids() {
+        int asteroidsToSpawn = waveSystem.getAsteroidsRemaining();
+        for (int i = 0; i < asteroidsToSpawn; i++) {
+            WaveSystem.AsteroidSpawnInfo spawnInfo = waveSystem.getSpawnInfo();
+            Asteroid asteroid = createAsteroidWithDifficulty(spawnInfo);
+            addGameObject(asteroid);
+        }
+    }
+
+    private void checkAndSpawnAsteroids() {
+        // Count current asteroids
+        int currentAsteroids = 0;
+        synchronized(lock) {
+            for (GameObject obj : gameObjects) {
+                if (obj instanceof Asteroid) {
+                    currentAsteroids++;
+                }
+            }
+        }
+
+        // If no asteroids remain and wave is in progress, complete the wave
+        if (currentAsteroids == 0 && waveSystem.isWaveInProgress()) {
+            waveSystem.asteroidDestroyed(); // This will trigger wave completion
+            spawnWaveAsteroids(); // Spawn next wave
+        }
+    }
+
+    private Asteroid createAsteroidWithDifficulty(WaveSystem.AsteroidSpawnInfo spawnInfo) {
+        // Create asteroid at screen edge
+        double x, y;
+        Random rand = new Random();
+
+        if (rand.nextBoolean()) {
+            x = rand.nextBoolean() ? -50 : WIDTH + 50;
+            y = rand.nextDouble() * HEIGHT;
+        } else {
+            x = rand.nextDouble() * WIDTH;
+            y = rand.nextBoolean() ? -50 : HEIGHT + 50;
+        }
+
+        // Calculate velocity towards screen center with some randomness
+        double angle = Math.atan2(HEIGHT/2 - y, WIDTH/2 - x) + (rand.nextDouble() - 0.5) * Math.PI / 2;
+        double vx = spawnInfo.speed * Math.cos(angle);
+        double vy = spawnInfo.speed * Math.sin(angle);
+
+        return new Asteroid(x, y, spawnInfo.size, vx, vy);
+    }
+
+    public WaveSystem getWaveSystem() {
+        return waveSystem;
     }
 }

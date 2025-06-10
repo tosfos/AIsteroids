@@ -57,4 +57,9 @@ build/
 Thumbs.db
 
 # Other temporary files
-*.tmp 
+*.tmp
+
+# Game data files (user-specific)
+*.dat
+leaderboard.dat
+achievements.dat

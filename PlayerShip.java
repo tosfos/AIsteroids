@@ -3,6 +3,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlayerShip extends GameObject {
     // Ship orientation in radians (initially pointing up: -PI/2)
@@ -15,17 +17,25 @@ public class PlayerShip extends GameObject {
     private int lives = 3;
     // Invulnerability timer in seconds after being hit.
     private double invulnerabilityTimer = 0;
-    // Engine trail particles
+        // Engine trail particles
     private List<TrailParticle> engineTrail;
 
+    // Power-up system
+    private Map<PowerUp.PowerUpType, Double> activePowerUps;
+    private double fireRate = 0.3; // Base fire rate (shots per second)
+    private double lastFireTime = 0;
+    private boolean hasShield = false;
+    private double shieldTimer = 0;
+
     // Constants for rotation and acceleration.
-    private final double rotationSpeed = Math.toRadians(180); // 180° per second.
-    private final double acceleration = 200; // pixels per second^2.
-    private final double maxSpeed = 300; // pixels per second.
+    private double rotationSpeed = Math.toRadians(180); // 180° per second.
+    private double acceleration = 200; // pixels per second^2.
+    private double maxSpeed = 300; // pixels per second.
 
     public PlayerShip(double x, double y) {
        super(x, y);
        engineTrail = new ArrayList<>();
+       activePowerUps = new HashMap<>();
     }
 
     @Override
@@ -66,6 +76,12 @@ public class PlayerShip extends GameObject {
 
         // Update engine trail
         updateEngineTrail(deltaTime);
+
+        // Update power-ups
+        updatePowerUps(deltaTime);
+
+        // Update last fire time
+        lastFireTime += deltaTime;
     }
 
     @Override
@@ -219,6 +235,11 @@ public class PlayerShip extends GameObject {
         return new Rectangle((int)x - 10, (int)y - 10, 20, 20);
     }
 
+    @Override
+    public double getRadius() {
+        return 10.0; // Ship radius for collision detection
+    }
+
     // Methods to update input state.
     public void setTurnLeft(boolean turn) {
         turnLeft = turn;
@@ -245,7 +266,7 @@ public class PlayerShip extends GameObject {
         }
         lives--;
         if (lives <= 0) {
-            alive = false;  // Ship destroyed.
+            active = false;  // Ship destroyed.
         } else {
             // Reset ship to the center and clear velocity.
             x = GameEngine.WIDTH / 2;
@@ -256,15 +277,144 @@ public class PlayerShip extends GameObject {
             invulnerabilityTimer = 2.0;
             // Play shield recharge sound when respawning
             SoundManager.playShieldRecharge();
+
+            // Create warp effect when respawning (needs to be called from GameEngine)
+            // This will be handled by GameEngine when damage occurs
         }
     }
 
     // Fire a bullet from the ship's tip.
-    public Bullet fireBullet() {
+    public List<Bullet> fireBullet() {
+        // Check fire rate
+        if (lastFireTime < (1.0 / getCurrentFireRate())) {
+            return new ArrayList<>();
+        }
+
+        lastFireTime = 0;
         SoundManager.playLaser();
+
+        // Track bullets fired for achievements
+        LeaderboardSystem.bulletFired();
+
+        List<Bullet> bullets = new ArrayList<>();
         double bulletX = x + Math.cos(angle) * 15;
         double bulletY = y + Math.sin(angle) * 15;
-        return new Bullet(bulletX, bulletY, angle);
+
+        if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
+            // Fire 3 bullets in spread pattern
+            for (int i = -1; i <= 1; i++) {
+                double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else if (activePowerUps.containsKey(PowerUp.PowerUpType.MULTI_SHOT)) {
+            // Fire 5 bullets in wider spread
+            for (int i = -2; i <= 2; i++) {
+                double spreadAngle = angle + (i * Math.PI / 8); // 22.5 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else {
+            // Normal single bullet
+            bullets.add(new Bullet(bulletX, bulletY, angle));
+        }
+
+        return bullets;
+    }
+
+    // Test-friendly bullet firing without rate limiting
+    public List<Bullet> fireBulletForTesting() {
+        List<Bullet> bullets = new ArrayList<>();
+        double bulletX = x + Math.cos(angle) * 15;
+        double bulletY = y + Math.sin(angle) * 15;
+
+        if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
+            // Fire 3 bullets in spread pattern
+            for (int i = -1; i <= 1; i++) {
+                double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else if (activePowerUps.containsKey(PowerUp.PowerUpType.MULTI_SHOT)) {
+            // Fire 5 bullets in wider spread
+            for (int i = -2; i <= 2; i++) {
+                double spreadAngle = angle + (i * Math.PI / 8); // 22.5 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else {
+            // Normal single bullet
+            bullets.add(new Bullet(bulletX, bulletY, angle));
+        }
+
+        return bullets;
+    }
+
+    private double getCurrentFireRate() {
+        double rate = fireRate;
+        if (activePowerUps.containsKey(PowerUp.PowerUpType.RAPID_FIRE)) {
+            rate *= 3.0; // Triple fire rate
+        }
+        return rate;
+    }
+
+    public void addPowerUp(PowerUp.PowerUpType type) {
+        activePowerUps.put(type, type.getDuration());
+        SoundManager.playPowerUp();
+
+        // Track power-up collection
+        LeaderboardSystem.powerUpCollected();
+
+        // Track specific power-up usage
+        if (type == PowerUp.PowerUpType.RAPID_FIRE) {
+            LeaderboardSystem.rapidFireUsed();
+        }
+
+        // Apply immediate effects
+        switch (type) {
+            case SHIELD:
+                hasShield = true;
+                shieldTimer = type.getDuration();
+                break;
+            case SPEED_BOOST:
+                maxSpeed = 500;
+                rotationSpeed = Math.toRadians(270);
+                acceleration = 400;
+                break;
+        }
+    }
+
+    private void updatePowerUps(double deltaTime) {
+        List<PowerUp.PowerUpType> expiredPowerUps = new ArrayList<>();
+
+        for (Map.Entry<PowerUp.PowerUpType, Double> entry : activePowerUps.entrySet()) {
+            double timeLeft = entry.getValue() - deltaTime;
+            if (timeLeft <= 0) {
+                expiredPowerUps.add(entry.getKey());
+            } else {
+                entry.setValue(timeLeft);
+            }
+        }
+
+        // Remove expired power-ups and reset effects
+        for (PowerUp.PowerUpType type : expiredPowerUps) {
+            activePowerUps.remove(type);
+            switch (type) {
+                case SHIELD:
+                    hasShield = false;
+                    shieldTimer = 0;
+                    break;
+                case SPEED_BOOST:
+                    maxSpeed = 300;
+                    rotationSpeed = Math.toRadians(180);
+                    acceleration = 200;
+                    break;
+            }
+        }
+    }
+
+    public boolean hasShield() {
+        return hasShield;
+    }
+
+    public Map<PowerUp.PowerUpType, Double> getActivePowerUps() {
+        return new HashMap<>(activePowerUps);
     }
 
     public void reset() {
@@ -286,7 +436,7 @@ public class PlayerShip extends GameObject {
         // Clear engine trail
         engineTrail.clear();
         // Ensure alive
-        alive = true;
+        active = true;
     }
 
     // Inner class for engine trail particles

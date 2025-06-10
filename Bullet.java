@@ -35,7 +35,7 @@ public class Bullet extends GameObject {
        timeAlive += deltaTime;
 
        if(timeAlive > lifespan) {
-          alive = false;
+          active = false;
        }
     }
 
@@ -131,6 +131,11 @@ public class Bullet extends GameObject {
     @Override
     public Rectangle getBounds() {
        return new Rectangle((int)x - 3, (int)y - 3, 6, 6);
+    }
+
+    @Override
+    public double getRadius() {
+        return 3.0; // Bullet radius for collision detection
     }
 
     // Inner class for trail points
