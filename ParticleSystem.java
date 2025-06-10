@@ -3,29 +3,32 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ParticleSystem {
     private List<Particle> particles;
     private static final Random rand = new Random();
 
     public ParticleSystem() {
-        particles = new ArrayList<>();
+        particles = new CopyOnWriteArrayList<>();
     }
 
-    public void update(double deltaTime) {
+    public synchronized void update(double deltaTime) {
         particles.removeIf(particle -> !particle.isAlive());
         for (Particle particle : particles) {
             particle.update(deltaTime);
         }
     }
 
-    public void draw(Graphics2D g) {
-        for (Particle particle : particles) {
+    public synchronized void draw(Graphics2D g) {
+        // Create a defensive copy to avoid concurrent modification
+        List<Particle> particlesCopy = new ArrayList<>(particles);
+        for (Particle particle : particlesCopy) {
             particle.draw(g);
         }
     }
 
-    public void createExplosion(double x, double y, int intensity) {
+    public synchronized void createExplosion(double x, double y, int intensity) {
         // Main explosion particles
         for (int i = 0; i < intensity * 8; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
@@ -58,7 +61,7 @@ public class ParticleSystem {
         }
     }
 
-    public void createDebris(double x, double y, int count) {
+    public synchronized void createDebris(double x, double y, int count) {
         for (int i = 0; i < count; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
             double speed = 20 + rand.nextDouble() * 80;
@@ -75,7 +78,7 @@ public class ParticleSystem {
         }
     }
 
-    public void createImpactSparks(double x, double y, double impactAngle) {
+    public synchronized void createImpactSparks(double x, double y, double impactAngle) {
         for (int i = 0; i < 5; i++) {
             double spreadAngle = impactAngle + (rand.nextDouble() - 0.5) * Math.PI / 2;
             double speed = 80 + rand.nextDouble() * 120;
@@ -85,7 +88,7 @@ public class ParticleSystem {
         }
     }
 
-    public void createWarpEffect(double x, double y) {
+    public synchronized void createWarpEffect(double x, double y) {
         for (int i = 0; i < 20; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
             double speed = 30 + rand.nextDouble() * 70;
@@ -95,7 +98,7 @@ public class ParticleSystem {
         }
     }
 
-    public void clear() {
+    public synchronized void clear() {
         particles.clear();
     }
 
