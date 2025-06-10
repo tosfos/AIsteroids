@@ -8,6 +8,13 @@ public abstract class GameObject implements GameEntity {
     protected CollisionDetector collisionDetector;
 
     public GameObject(double x, double y) {
+        // Allow any finite coordinates (objects can be off-screen)
+        if (Double.isNaN(x) || Double.isInfinite(x)) {
+            throw new IllegalArgumentException("x coordinate must be finite, got: " + x);
+        }
+        if (Double.isNaN(y) || Double.isInfinite(y)) {
+            throw new IllegalArgumentException("y coordinate must be finite, got: " + y);
+        }
         this.x = x;
         this.y = y;
         this.collisionDetector = new DefaultCollisionDetector();
@@ -15,9 +22,16 @@ public abstract class GameObject implements GameEntity {
 
     // Constructor for dependency injection (testable)
     public GameObject(double x, double y, CollisionDetector collisionDetector) {
+        // Allow any finite coordinates (objects can be off-screen)
+        if (Double.isNaN(x) || Double.isInfinite(x)) {
+            throw new IllegalArgumentException("x coordinate must be finite, got: " + x);
+        }
+        if (Double.isNaN(y) || Double.isInfinite(y)) {
+            throw new IllegalArgumentException("y coordinate must be finite, got: " + y);
+        }
         this.x = x;
         this.y = y;
-        this.collisionDetector = collisionDetector;
+        this.collisionDetector = InputValidator.validateNotNull(collisionDetector, "collisionDetector");
     }
 
     // Update state using deltaTime in seconds.
@@ -45,6 +59,7 @@ public abstract class GameObject implements GameEntity {
 
     // Testable methods with clear responsibilities
     public void updatePosition(double deltaTime) {
+        InputValidator.validateDeltaTime(deltaTime);
         x += vx * deltaTime;
         y += vy * deltaTime;
         rotation += rotationSpeed * deltaTime;
@@ -59,6 +74,7 @@ public abstract class GameObject implements GameEntity {
     }
 
     public boolean checkCollision(GameObject other) {
+        InputValidator.validateNotNull(other, "other");
         return collisionDetector.checkCollision(this, other);
     }
 

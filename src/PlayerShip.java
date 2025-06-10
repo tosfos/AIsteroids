@@ -42,6 +42,8 @@ public class PlayerShip extends GameObject {
 
     @Override
     public void update(double deltaTime) {
+        InputValidator.validateDeltaTime(deltaTime);
+
         // Update invulnerability timer
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= deltaTime;
@@ -359,8 +361,10 @@ public class PlayerShip extends GameObject {
     }
 
     public void addPowerUp(PowerUp.PowerUpType type) {
+        InputValidator.validateNotNull(type, "type");
         activePowerUps.put(type, type.getDuration());
-        SoundManager.playPowerUp();
+        InputValidator.safeExecute(() -> SoundManager.playPowerUp(),
+            "Failed to play power-up sound");
 
         // Track power-up collection
         LeaderboardSystem.powerUpCollected();

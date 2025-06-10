@@ -16,12 +16,12 @@ public class Asteroid extends GameObject {
 
     public Asteroid(double x, double y, int size, double vx, double vy) {
        super(x, y);
-       this.size = size;
+       this.size = InputValidator.validateAsteroidSize(size);
        this.vx = vx;
        this.vy = vy;
-       this.radius = size * 15;
+       this.radius = size * GameConfig.Asteroid.RADIUS_PER_SIZE;
        this.rotation = 0;
-       this.rotationSpeed = (rand.nextDouble() - 0.5) * 0.5;  // Slower rotation speed between -0.25 and 0.25 rad/s.
+       this.rotationSpeed = (rand.nextDouble() - 0.5) * GameConfig.Asteroid.MAX_ROTATION_SPEED;
 
        // Generate random asteroid colors for variety
        generateAsteroidColors();
@@ -73,6 +73,7 @@ public class Asteroid extends GameObject {
 
     @Override
     public void update(double deltaTime) {
+       InputValidator.validateDeltaTime(deltaTime);
        x += vx * deltaTime;
        y += vy * deltaTime;
        rotation += rotationSpeed * deltaTime;
@@ -136,7 +137,10 @@ public class Asteroid extends GameObject {
 
     // Called when the asteroid is hit by a bullet.
     public void hit(GameEngine engine) {
-       SoundManager.playExplosion();
+       InputValidator.validateNotNull(engine, "engine");
+
+       InputValidator.safeExecute(() -> SoundManager.playExplosion(),
+           "Failed to play explosion sound");
 
        // Trigger particle explosion effect
        triggerExplosionEffect(engine);
