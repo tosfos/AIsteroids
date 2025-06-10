@@ -20,6 +20,12 @@ public class GamePanel extends JPanel implements KeyListener {
     private Font titleFont;
     private Font subtitleFont;
 
+    // Power-up message system
+    private String powerUpMessage = "";
+    private double powerUpMessageTimer = 0;
+    private static final double POWER_UP_MESSAGE_DURATION = 3.0; // 3 seconds
+    private Font powerUpMessageFont;
+
     public GamePanel(GameEngine engine) {
        this.engine = engine;
        this.player = engine.getPlayer();
@@ -43,11 +49,13 @@ public class GamePanel extends JPanel implements KeyListener {
            hudFont = new Font("Orbitron", Font.BOLD, 16);
            titleFont = new Font("Orbitron", Font.BOLD, 48);
            subtitleFont = new Font("Orbitron", Font.PLAIN, 24);
+           powerUpMessageFont = new Font("Orbitron", Font.BOLD, 20);
        } catch (Exception e) {
            // Fallback fonts
            hudFont = new Font("Arial", Font.BOLD, 16);
            titleFont = new Font("Arial", Font.BOLD, 48);
            subtitleFont = new Font("Arial", Font.PLAIN, 24);
+           powerUpMessageFont = new Font("Arial", Font.BOLD, 20);
        }
 
        setFocusable(true);
@@ -99,6 +107,14 @@ public class GamePanel extends JPanel implements KeyListener {
         particleSystem.update(1.0/60.0);
         particleSystem.draw(g2d);
 
+        // Update power-up message timer
+        if (powerUpMessageTimer > 0) {
+            powerUpMessageTimer -= 1.0/60.0;
+            if (powerUpMessageTimer <= 0) {
+                powerUpMessage = "";
+            }
+        }
+
         // Draw all game objects with enhanced effects
         drawGameObjects(g2d);
     }
@@ -112,6 +128,9 @@ public class GamePanel extends JPanel implements KeyListener {
     private void drawUI(Graphics2D g2d) {
         // Draw enhanced UI
         drawEnhancedHUD(g2d);
+
+        // Draw power-up message if active
+        drawPowerUpMessage(g2d);
 
         // If game is over, draw the enhanced game over screen
         if (engine.isGameOver()) {
@@ -236,6 +255,56 @@ public class GamePanel extends JPanel implements KeyListener {
         g.setColor(new Color(0, 255, 255, 50));
         g.setStroke(new BasicStroke(2));
         g.drawRect(5, 5, 250, 50);
+    }
+
+    private void drawPowerUpMessage(Graphics2D g) {
+        if (powerUpMessage.isEmpty() || powerUpMessageTimer <= 0) {
+            return;
+        }
+
+        g.setFont(powerUpMessageFont);
+        FontMetrics fm = g.getFontMetrics();
+
+        // Position message in center-top area
+        int x = (getWidth() - fm.stringWidth(powerUpMessage)) / 2;
+        int y = 150;
+
+        // Calculate fade effect for last second
+        float alpha = 1.0f;
+        if (powerUpMessageTimer < 1.0) {
+            alpha = (float) powerUpMessageTimer;
+        }
+
+        // Draw glow effect
+        Color glowColor = new Color(255, 255, 0, (int)(100 * alpha));
+        drawGlowText(g, powerUpMessage, x, y, new Color(255, 255, 0, (int)(255 * alpha)), glowColor);
+    }
+
+    public void showPowerUpMessage(PowerUp.PowerUpType powerUpType) {
+        switch (powerUpType) {
+            case RAPID_FIRE:
+                powerUpMessage = "RAPID FIRE ACTIVATED!";
+                break;
+            case SPREAD_SHOT:
+                powerUpMessage = "SPREAD SHOT ACTIVATED!";
+                break;
+            case SHIELD:
+                powerUpMessage = "SHIELD ACTIVATED!";
+                break;
+            case SPEED_BOOST:
+                powerUpMessage = "SPEED BOOST ACTIVATED!";
+                break;
+            case MULTI_SHOT:
+                powerUpMessage = "MULTI SHOT ACTIVATED!";
+                break;
+            case LASER_BEAM:
+                powerUpMessage = "LASER BEAM ACTIVATED!";
+                break;
+            default:
+                powerUpMessage = "POWER-UP ACTIVATED!";
+                break;
+        }
+        powerUpMessageTimer = POWER_UP_MESSAGE_DURATION;
     }
 
     private void drawMiniShip(Graphics2D g, int x, int y) {

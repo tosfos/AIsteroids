@@ -321,6 +321,11 @@ public class GameEngine implements Runnable {
 
         ship.addPowerUp(powerUp.getType());
         powerUp.setAlive(false);
+
+        // Show power-up message
+        if (gamePanel != null) {
+            gamePanel.showPowerUpMessage(powerUp.getType());
+        }
     }
 
     public void addGameObject(GameObject obj) {
