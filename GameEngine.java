@@ -29,6 +29,9 @@ public class GameEngine implements Runnable {
        // Start ambient space sound
        SoundManager.startAmbientSpace();
 
+       // Start dynamic music
+       MusicSystem.startMusic();
+
        // Create player ship at center.
        player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
        addGameObject(player);
@@ -80,6 +83,7 @@ public class GameEngine implements Runnable {
                 gameOver = true;
                 SoundManager.playGameOver(); // Play game over sound
                 SoundManager.stopAmbientSpace(); // Stop ambient sound
+                MusicSystem.stopMusic(); // Stop dynamic music
             }
 
             // Sleep briefly (approximate 60 FPS update rate)
@@ -96,6 +100,9 @@ public class GameEngine implements Runnable {
         if (gameOver) {
             return;
         }
+
+        // Update dynamic music intensity based on game state
+        updateMusicIntensity();
 
         synchronized(lock) {
             // Update every game object.
@@ -246,6 +253,9 @@ public class GameEngine implements Runnable {
             // Restart ambient sound
             SoundManager.startAmbientSpace();
 
+            // Restart dynamic music
+            MusicSystem.startMusic();
+
             // Clear particle effects
             if (gamePanel != null) {
                 gamePanel.getParticleSystem().clear();
@@ -279,5 +289,22 @@ public class GameEngine implements Runnable {
         if (gamePanel != null) {
             gamePanel.getParticleSystem().createImpactSparks(x, y, angle);
         }
+    }
+
+    private void updateMusicIntensity() {
+        // Count asteroids
+        int asteroidCount = 0;
+        boolean hasPowerUp = false;
+
+        synchronized(lock) {
+            for (GameObject obj : gameObjects) {
+                if (obj instanceof Asteroid) {
+                    asteroidCount++;
+                }
+            }
+            hasPowerUp = !player.getActivePowerUps().isEmpty();
+        }
+
+        MusicSystem.updateMusicIntensity(asteroidCount, player.getLives(), hasPowerUp);
     }
 }
