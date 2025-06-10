@@ -235,6 +235,11 @@ public class PlayerShip extends GameObject {
         return new Rectangle((int)x - 10, (int)y - 10, 20, 20);
     }
 
+    @Override
+    public double getRadius() {
+        return 10.0; // Ship radius for collision detection
+    }
+
     // Methods to update input state.
     public void setTurnLeft(boolean turn) {
         turnLeft = turn;
@@ -261,7 +266,7 @@ public class PlayerShip extends GameObject {
         }
         lives--;
         if (lives <= 0) {
-            alive = false;  // Ship destroyed.
+            active = false;  // Ship destroyed.
         } else {
             // Reset ship to the center and clear velocity.
             x = GameEngine.WIDTH / 2;
@@ -291,6 +296,32 @@ public class PlayerShip extends GameObject {
         // Track bullets fired for achievements
         LeaderboardSystem.bulletFired();
 
+        List<Bullet> bullets = new ArrayList<>();
+        double bulletX = x + Math.cos(angle) * 15;
+        double bulletY = y + Math.sin(angle) * 15;
+
+        if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
+            // Fire 3 bullets in spread pattern
+            for (int i = -1; i <= 1; i++) {
+                double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else if (activePowerUps.containsKey(PowerUp.PowerUpType.MULTI_SHOT)) {
+            // Fire 5 bullets in wider spread
+            for (int i = -2; i <= 2; i++) {
+                double spreadAngle = angle + (i * Math.PI / 8); // 22.5 degree spread
+                bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
+            }
+        } else {
+            // Normal single bullet
+            bullets.add(new Bullet(bulletX, bulletY, angle));
+        }
+
+        return bullets;
+    }
+
+    // Test-friendly bullet firing without rate limiting
+    public List<Bullet> fireBulletForTesting() {
         List<Bullet> bullets = new ArrayList<>();
         double bulletX = x + Math.cos(angle) * 15;
         double bulletY = y + Math.sin(angle) * 15;
@@ -405,7 +436,7 @@ public class PlayerShip extends GameObject {
         // Clear engine trail
         engineTrail.clear();
         // Ensure alive
-        alive = true;
+        active = true;
     }
 
     // Inner class for engine trail particles

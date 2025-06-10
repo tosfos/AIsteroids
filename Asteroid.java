@@ -129,6 +129,11 @@ public class Asteroid extends GameObject {
        return new Rectangle((int)(x - radius), (int)(y - radius), (int)(radius * 2), (int)(radius * 2));
     }
 
+    @Override
+    public double getRadius() {
+        return radius;
+    }
+
     // Called when the asteroid is hit by a bullet.
     public void hit(GameEngine engine) {
        SoundManager.playExplosion();
@@ -172,7 +177,7 @@ public class Asteroid extends GameObject {
           LeaderboardSystem.asteroidDestroyed();
        }
        // Mark this asteroid as destroyed.
-       alive = false;
+       active = false;
     }
 
     private void triggerExplosionEffect(GameEngine engine) {

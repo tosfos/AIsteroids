@@ -53,7 +53,7 @@ public class PowerUp extends GameObject {
 
         // Fade out over last 5 seconds
         if (timeAlive >= lifespan) {
-            alive = false;
+            active = false;
         }
     }
 
@@ -115,6 +115,11 @@ public class PowerUp extends GameObject {
     @Override
     public Rectangle getBounds() {
         return new Rectangle((int)x - 12, (int)y - 12, 24, 24);
+    }
+
+    @Override
+    public double getRadius() {
+        return 12.0; // PowerUp radius for collision detection
     }
 
     public PowerUpType getType() {
