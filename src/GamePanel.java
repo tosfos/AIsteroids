@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Collections;
@@ -251,10 +252,13 @@ public class GamePanel extends JPanel implements KeyListener {
             g.setFont(hudFont); // Reset font
         }
 
+        // Power-up status indicators
+        drawPowerUpStatusIcons(g);
+
         // Add a subtle border effect
         g.setColor(new Color(0, 255, 255, 50));
         g.setStroke(new BasicStroke(2));
-        g.drawRect(5, 5, 250, 50);
+        g.drawRect(5, 5, 250, 125);
     }
 
     private void drawPowerUpMessage(Graphics2D g) {
@@ -305,6 +309,90 @@ public class GamePanel extends JPanel implements KeyListener {
                 break;
         }
         powerUpMessageTimer = POWER_UP_MESSAGE_DURATION;
+    }
+
+    private void drawPowerUpStatusIcons(Graphics2D g) {
+        Map<PowerUp.PowerUpType, Double> activePowerUps = player.getActivePowerUps();
+        if (activePowerUps.isEmpty()) {
+            return;
+        }
+
+        // Power-up status label
+        g.setFont(hudFont);
+        g.setColor(new Color(255, 255, 255, 200));
+        g.drawString("POWER-UPS:", 10, 125);
+
+        int iconX = 10;
+        int iconY = 135;
+        int iconSize = 20;
+        int iconSpacing = 25;
+
+        for (Map.Entry<PowerUp.PowerUpType, Double> entry : activePowerUps.entrySet()) {
+            PowerUp.PowerUpType type = entry.getKey();
+            double timeRemaining = entry.getValue();
+            double totalDuration = type.getDuration();
+
+            // Calculate fade based on remaining time
+            float progress = (float) (timeRemaining / totalDuration);
+            float alpha = Math.max(0.3f, progress); // Minimum 30% alpha so it's still visible
+
+            // Draw icon background circle
+            Color iconColor = type.getColor();
+            Color fadedColor = new Color(iconColor.getRed(), iconColor.getGreen(),
+                                       iconColor.getBlue(), (int)(255 * alpha));
+            g.setColor(fadedColor);
+            g.fillOval(iconX, iconY, iconSize, iconSize);
+
+            // Draw glow effect
+            Color glowColor = new Color(iconColor.getRed(), iconColor.getGreen(),
+                                      iconColor.getBlue(), (int)(100 * alpha));
+            g.setColor(glowColor);
+            g.fillOval(iconX - 2, iconY - 2, iconSize + 4, iconSize + 4);
+            g.setColor(fadedColor);
+            g.fillOval(iconX, iconY, iconSize, iconSize);
+
+            // Draw icon symbol
+            g.setColor(new Color(0, 0, 0, (int)(255 * alpha)));
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            FontMetrics fm = g.getFontMetrics();
+            String symbol = getPowerUpSymbol(type);
+            int symbolWidth = fm.stringWidth(symbol);
+            int symbolHeight = fm.getAscent();
+            g.drawString(symbol,
+                iconX + (iconSize - symbolWidth) / 2,
+                iconY + (iconSize + symbolHeight) / 2 - 2);
+
+            // Draw progress ring
+            drawProgressRing(g, iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 3, progress, fadedColor);
+
+            iconX += iconSpacing;
+        }
+    }
+
+    private void drawProgressRing(Graphics2D g, int centerX, int centerY, int radius, float progress, Color color) {
+        g.setStroke(new BasicStroke(2));
+        g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
+
+        // Full circle background
+        g.drawOval(centerX - radius, centerY - radius, radius * 2, radius * 2);
+
+        // Progress arc
+        g.setColor(color);
+        int startAngle = 90; // Start at top
+        int arcAngle = (int) (360 * progress);
+        g.drawArc(centerX - radius, centerY - radius, radius * 2, radius * 2, startAngle, arcAngle);
+    }
+
+    private String getPowerUpSymbol(PowerUp.PowerUpType type) {
+        switch (type) {
+            case RAPID_FIRE: return "R";
+            case SPREAD_SHOT: return "S";
+            case SHIELD: return "♦";
+            case SPEED_BOOST: return "»";
+            case MULTI_SHOT: return "M";
+            case LASER_BEAM: return "L";
+            default: return "?";
+        }
     }
 
     private void drawMiniShip(Graphics2D g, int x, int y) {
