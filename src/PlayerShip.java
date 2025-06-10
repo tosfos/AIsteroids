@@ -362,45 +362,72 @@ public class PlayerShip extends GameObject {
         return bullets;
     }
 
+    /**
+     * Calculates the current fire rate including power-up modifications.
+     * The base fire rate is multiplied by power-up effects.
+     *
+     * @return Current fire rate in shots per second
+     */
     private double getCurrentFireRate() {
         double rate = fireRate;
         if (activePowerUps.containsKey(PowerUp.PowerUpType.RAPID_FIRE)) {
-            rate *= 3.0; // Triple fire rate
+            rate *= 3.0; // Triple fire rate with Rapid Fire power-up
         }
         return rate;
     }
 
+    /**
+     * Activates a power-up on this player ship.
+     * Power-ups modify ship behavior for their duration and stack with existing power-ups.
+     * Some power-ups have immediate effects (Shield, Speed Boost), while others modify
+     * behavior during other actions (Rapid Fire, Spread Shot, Multi Shot).
+     *
+     * @param type The type of power-up to activate
+     * @throws IllegalArgumentException if type is null
+     */
     public void addPowerUp(PowerUp.PowerUpType type) {
         InputValidator.validateNotNull(type, "type");
         activePowerUps.put(type, type.getDuration());
         InputValidator.safeExecute(() -> SoundManager.playPowerUp(),
             "Failed to play power-up sound");
 
-        // Track power-up collection
+        // Track power-up collection for achievements and statistics
         LeaderboardSystem.powerUpCollected();
 
-        // Track specific power-up usage
+        // Track specific power-up usage for achievements
         if (type == PowerUp.PowerUpType.RAPID_FIRE) {
             LeaderboardSystem.rapidFireUsed();
         }
 
-        // Apply immediate effects
+        // Apply immediate effects for certain power-ups
         switch (type) {
             case SHIELD:
+                // Activate invulnerability shield
                 hasShield = true;
                 shieldTimer = type.getDuration();
                 break;
             case SPEED_BOOST:
-                maxSpeed = 500;
-                rotationSpeed = Math.toRadians(270);
-                acceleration = 400;
+                // Increase ship maneuverability and speed
+                maxSpeed = 500;        // Increased from 300
+                rotationSpeed = Math.toRadians(270);  // Increased from 180°/s
+                acceleration = 400;    // Increased from 200
                 break;
+            // Other power-ups (RAPID_FIRE, SPREAD_SHOT, MULTI_SHOT, LASER_BEAM)
+            // are applied dynamically during fireBullet() calls
         }
     }
 
+    /**
+     * Updates all active power-ups, decreasing their remaining time and removing expired ones.
+     * When power-ups expire, their effects are reverted to normal values.
+     * Called every frame during ship update.
+     *
+     * @param deltaTime Time elapsed since last update in seconds
+     */
     private void updatePowerUps(double deltaTime) {
         List<PowerUp.PowerUpType> expiredPowerUps = new ArrayList<>();
 
+        // Decrease time remaining for all active power-ups
         for (Map.Entry<PowerUp.PowerUpType, Double> entry : activePowerUps.entrySet()) {
             double timeLeft = entry.getValue() - deltaTime;
             if (timeLeft <= 0) {
@@ -410,27 +437,43 @@ public class PlayerShip extends GameObject {
             }
         }
 
-        // Remove expired power-ups and reset effects
+        // Remove expired power-ups and revert their effects
         for (PowerUp.PowerUpType type : expiredPowerUps) {
             activePowerUps.remove(type);
             switch (type) {
                 case SHIELD:
+                    // Deactivate shield protection
                     hasShield = false;
                     shieldTimer = 0;
                     break;
                 case SPEED_BOOST:
+                    // Restore normal ship maneuverability
                     maxSpeed = 300;
                     rotationSpeed = Math.toRadians(180);
                     acceleration = 200;
                     break;
+                // Other power-ups don't need explicit cleanup as they're
+                // checked dynamically during fireBullet() calls
             }
         }
     }
 
+    /**
+     * Checks if the ship currently has shield protection active.
+     * Shield power-up provides invulnerability to asteroid collisions.
+     *
+     * @return true if shield is active, false otherwise
+     */
     public boolean hasShield() {
         return hasShield;
     }
 
+    /**
+     * Gets a snapshot of all currently active power-ups and their remaining durations.
+     * Used by the HUD to display power-up status indicators.
+     *
+     * @return Map of active power-up types to their remaining time in seconds
+     */
     public Map<PowerUp.PowerUpType, Double> getActivePowerUps() {
         return new HashMap<>(activePowerUps);
     }

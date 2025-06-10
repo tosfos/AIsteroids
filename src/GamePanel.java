@@ -27,6 +27,9 @@ public class GamePanel extends JPanel implements KeyListener {
     private static final double POWER_UP_MESSAGE_DURATION = 3.0; // 3 seconds
     private Font powerUpMessageFont;
 
+    // Help system
+    private boolean showingHelp = false;
+
     public GamePanel(GameEngine engine) {
        this.engine = engine;
        this.player = engine.getPlayer();
@@ -132,6 +135,11 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // Draw power-up message if active
         drawPowerUpMessage(g2d);
+
+        // Draw help overlay if active
+        if (showingHelp) {
+            drawHelpOverlay(g2d);
+        }
 
         // If game is over, draw the enhanced game over screen
         if (engine.isGameOver()) {
@@ -395,6 +403,68 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
+    private void drawHelpOverlay(Graphics2D g) {
+        // Semi-transparent background
+        g.setColor(new Color(0, 0, 0, 180));
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        // Help title
+        g.setFont(titleFont);
+        g.setColor(Color.WHITE);
+        String title = "POWER-UP GUIDE";
+        FontMetrics fm = g.getFontMetrics();
+        int x = (getWidth() - fm.stringWidth(title)) / 2;
+        g.drawString(title, x, 80);
+
+        // Power-up information
+        g.setFont(hudFont);
+        String[] helpLines = {
+            "🟠 RAPID FIRE (R) - Triples firing rate for 10s",
+            "🔵 SPREAD SHOT (S) - 3 bullets in spread for 8s",
+            "🟢 SHIELD (♦) - Invulnerability for 12s",
+            "🟡 SPEED BOOST (») - Enhanced speed for 6s",
+            "🟣 MULTI SHOT (M) - 5 bullets in spread for 15s",
+            "🔴 LASER BEAM (L) - Future weapon for 20s",
+            "",
+            "💡 TIPS:",
+            "• Power-ups stack together for combos",
+            "• HUD shows active power-ups with timers",
+            "• Collect power-ups before they fade away",
+            "• Use Shield + Rapid Fire for safe aggression",
+            "",
+            "CONTROLS:",
+            "←/→ Rotate   ↑ Thrust   SPACE Fire   H Help"
+        };
+
+        int startY = 130;
+        for (int i = 0; i < helpLines.length; i++) {
+            if (helpLines[i].startsWith("🟠") || helpLines[i].startsWith("🔵") ||
+                helpLines[i].startsWith("🟢") || helpLines[i].startsWith("🟡") ||
+                helpLines[i].startsWith("🟣") || helpLines[i].startsWith("🔴")) {
+                // Color-code power-up lines
+                g.setColor(Color.YELLOW);
+            } else if (helpLines[i].startsWith("💡") || helpLines[i].startsWith("CONTROLS:")) {
+                g.setColor(Color.CYAN);
+            } else if (helpLines[i].startsWith("•")) {
+                g.setColor(new Color(200, 200, 200));
+            } else {
+                g.setColor(Color.WHITE);
+            }
+
+            fm = g.getFontMetrics();
+            int lineX = (getWidth() - fm.stringWidth(helpLines[i])) / 2;
+            g.drawString(helpLines[i], lineX, startY + i * 20);
+        }
+
+        // Close instruction
+        g.setFont(powerUpMessageFont);
+        g.setColor(Color.YELLOW);
+        String closeMsg = "Press H to close help";
+        fm = g.getFontMetrics();
+        x = (getWidth() - fm.stringWidth(closeMsg)) / 2;
+        g.drawString(closeMsg, x, getHeight() - 50);
+    }
+
     private void drawMiniShip(Graphics2D g, int x, int y) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.translate(x, y);
@@ -522,20 +592,26 @@ public class GamePanel extends JPanel implements KeyListener {
         // Normal gameplay controls
         switch (key) {
             case KeyEvent.VK_LEFT:
-                player.setTurnLeft(true);
+                if (!showingHelp) player.setTurnLeft(true);
                 break;
             case KeyEvent.VK_RIGHT:
-                player.setTurnRight(true);
+                if (!showingHelp) player.setTurnRight(true);
                 break;
             case KeyEvent.VK_UP:
-                player.setAccelerating(true);
+                if (!showingHelp) player.setAccelerating(true);
                 break;
             case KeyEvent.VK_SPACE:
-                // Fire a bullet from the player's ship.
-                List<Bullet> bullets = player.fireBullet();
-                for (Bullet bullet : bullets) {
-                    engine.addGameObject(bullet);
+                if (!showingHelp) {
+                    // Fire a bullet from the player's ship.
+                    List<Bullet> bullets = player.fireBullet();
+                    for (Bullet bullet : bullets) {
+                        engine.addGameObject(bullet);
+                    }
                 }
+                break;
+            case KeyEvent.VK_H:
+                // Toggle help overlay
+                showingHelp = !showingHelp;
                 break;
         }
     }
