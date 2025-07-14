@@ -291,6 +291,7 @@ public class PlayerShip extends GameObject {
             vy = 0;
             // Set invulnerability period to prevent immediate further damage
             invulnerabilityTimer = GameConfig.PlayerShip.INVULNERABILITY_TIME;
+            lastFireTime = 1.0;
             // Play shield recharge sound when respawning
             SoundManager.playShieldRecharge();
 
@@ -308,9 +309,6 @@ public class PlayerShip extends GameObject {
 
         lastFireTime = 0;
         SoundManager.playLaser();
-
-        // Track bullets fired for achievements
-        LeaderboardSystem.bulletFired();
 
         List<Bullet> bullets = new ArrayList<>();
         double bulletX = x + Math.cos(angle) * 15;
@@ -333,6 +331,7 @@ public class PlayerShip extends GameObject {
             bullets.add(new Bullet(bulletX, bulletY, angle));
         }
 
+        LeaderboardSystem.updateGameStats("bullets_fired", bullets.size());
         return bullets;
     }
 
