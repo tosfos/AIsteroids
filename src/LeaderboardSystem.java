@@ -8,7 +8,7 @@ public class LeaderboardSystem {
     private static final int MAX_LEADERBOARD_ENTRIES = 10;
 
     private static List<LeaderboardEntry> leaderboard = new ArrayList<>();
-    private static Set<Achievement> unlockedAchievements = new HashSet<>();
+    private static Set<String> unlockedAchievements = new HashSet<>();
     private static Map<String, Integer> gameStats = new HashMap<>();
 
     static {
@@ -119,7 +119,7 @@ public class LeaderboardSystem {
 
     private static void checkAchievements() {
         for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement)) {
+            if (!unlockedAchievements.contains(achievement.getName())) {
                 boolean unlocked = false;
 
                 switch (achievement) {
@@ -175,25 +175,34 @@ public class LeaderboardSystem {
     }
 
     public static void unlockAchievement(Achievement achievement) {
-        if (!unlockedAchievements.contains(achievement)) {
-            unlockedAchievements.add(achievement);
+        String name = achievement.getName();
+        if (!unlockedAchievements.contains(name)) {
+            unlockedAchievements.add(name);
             saveAchievements();
             // Achievement notification would be handled by UI
         }
     }
 
     public static boolean isAchievementUnlocked(Achievement achievement) {
-        return unlockedAchievements.contains(achievement);
+        return unlockedAchievements.contains(achievement.getName());
     }
 
     public static Set<Achievement> getUnlockedAchievements() {
-        return new HashSet<>(unlockedAchievements);
+        Set<Achievement> result = new HashSet<>();
+        for (String name : unlockedAchievements) {
+            try {
+                result.add(Achievement.valueOf(name));
+            } catch (IllegalArgumentException e) {
+                // ignore invalid
+            }
+        }
+        return result;
     }
 
     public static List<Achievement> getLockedAchievements() {
         List<Achievement> locked = new ArrayList<>();
         for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement)) {
+            if (!unlockedAchievements.contains(achievement.getName())) {
                 locked.add(achievement);
             }
         }
@@ -221,10 +230,18 @@ public class LeaderboardSystem {
     private static void loadAchievements() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ACHIEVEMENTS_FILE))) {
             @SuppressWarnings("unchecked")
-            Set<Achievement> loadedAchievements = (Set<Achievement>) ois.readObject();
+            Set<String> loadedAchievements = (Set<String>) ois.readObject();
             @SuppressWarnings("unchecked")
             Map<String, Integer> loadedStats = (Map<String, Integer>) ois.readObject();
-            unlockedAchievements = loadedAchievements;
+            unlockedAchievements = new HashSet<>();
+            for (String name : loadedAchievements) {
+                try {
+                    Achievement.valueOf(name);
+                    unlockedAchievements.add(name);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Ignored invalid achievement: " + name);
+                }
+            }
             gameStats = loadedStats;
         } catch (Exception e) {
             unlockedAchievements = new HashSet<>();
