@@ -6,7 +6,7 @@ import java.util.List;
 public class Bullet extends GameObject {
     private double angle;
     private double speed = 400; // pixels per second.
-    private double lifespan = 0.7; // Bullet lasts for 0.7 seconds.
+    private double lifespan = 2; // Bullet lasts for 2 seconds.
     private double timeAlive = 0;
     private List<TrailPoint> trail;
     private int trailLength = 8;
@@ -106,7 +106,14 @@ public class Bullet extends GameObject {
                 g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha * 0.8f));
                 g.setColor(new Color(100, 200, 255));
                 g.setStroke(new BasicStroke(thickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                g.drawLine((int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y);
+
+                // Don't draw trail if points are too far apart (screen wrap)
+                double dx = p2.x - p1.x;
+                double dy = p2.y - p1.y;
+                double distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared < GameEngine.WIDTH * 0.25) { // Only draw if less than half screen width apart
+                    g.drawLine((int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y);
+                }
             }
         }
 
