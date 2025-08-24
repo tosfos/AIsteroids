@@ -66,6 +66,9 @@ Thumbs.db
 # Other temporary files
 *.tmp
 
+# Tool-specific files
+WARP.md
+
 # Game data files (user-specific)
 *.dat
 leaderboard.dat
