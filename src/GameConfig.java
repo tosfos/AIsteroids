@@ -31,7 +31,7 @@ public final class GameConfig {
     // === BULLET SETTINGS ===
     public static final class Bullet {
         public static final double SPEED = 500.0; // pixels per second
-        public static final double LIFETIME = 2.0; // seconds
+        public static final double LIFETIME = 0.7; // seconds
         public static final double RADIUS = 3.0; // collision radius
         public static final int MULTI_SHOT_COUNT = 3; // bullets per multi-shot
         public static final double MULTI_SHOT_SPREAD = Math.toRadians(15.0); // angle spread
