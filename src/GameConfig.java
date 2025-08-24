@@ -94,17 +94,50 @@ public final class GameConfig {
 
     // === VISUAL EFFECTS SETTINGS ===
     public static final class Effects {
+        // General particle settings
         public static final int EXPLOSION_PARTICLES_PER_SIZE = 8;
         public static final int DEBRIS_PARTICLES_PER_SIZE = 3;
         public static final double PARTICLE_SPEED_MIN = 50.0;
         public static final double PARTICLE_SPEED_MAX = 200.0;
         public static final double PARTICLE_LIFETIME_MIN = 1.0;
         public static final double PARTICLE_LIFETIME_MAX = 3.0;
+
+        // Specific particle type settings
+        public static final class Explosion {
+            public static final double SPEED_MIN = 50.0;
+            public static final double SPEED_MAX = 200.0;
+            public static final double LIFETIME_MIN = 0.8;
+            public static final double LIFETIME_MAX = 1.2;
+        }
+
+        public static final class Spark {
+            public static final double SPEED_MIN = 80.0;
+            public static final double SPEED_MAX = 200.0;
+            public static final double LIFETIME_MIN = 0.2;
+            public static final double LIFETIME_MAX = 0.3;
+        }
+
+        public static final class Debris {
+            public static final double SPEED_MIN = 20.0;
+            public static final double SPEED_MAX = 100.0;
+            public static final double LIFETIME_MIN = 2.0;
+            public static final double LIFETIME_MAX = 5.0;
+        }
+
+        public static final class Warp {
+            public static final double SPEED_MIN = 30.0;
+            public static final double SPEED_MAX = 100.0;
+            public static final double LIFETIME = 1.0;
+        }
+
+        // Starfield settings
         public static final int STARFIELD_STAR_COUNT = 200;
         public static final double STAR_SIZE_MIN = 1.0;
         public static final double STAR_SIZE_MAX = 4.0;
         public static final float STAR_BRIGHTNESS_MIN = 0.3f;
         public static final float STAR_BRIGHTNESS_MAX = 1.0f;
+
+        // Visual effect settings
         public static final double INVULNERABILITY_BLINK_SPEED = 0.02;
         public static final float INVULNERABILITY_MIN_ALPHA = 0.3f;
         public static final float INVULNERABILITY_MAX_ALPHA = 1.0f;

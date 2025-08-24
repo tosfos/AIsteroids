@@ -32,7 +32,7 @@ public class ParticleSystem {
         // Main explosion particles
         for (int i = 0; i < intensity * 8; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
-            double speed = 50 + rand.nextDouble() * 150;
+            double speed = GameConfig.Effects.Explosion.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Explosion.SPEED_MAX - GameConfig.Effects.Explosion.SPEED_MIN);
             double vx = Math.cos(angle) * speed;
             double vy = Math.sin(angle) * speed;
 
@@ -45,7 +45,7 @@ public class ParticleSystem {
                 color = Color.RED;
             }
 
-            particles.add(new ExplosionParticle(x, y, vx, vy, color, 0.8 + rand.nextDouble() * 0.4));
+            particles.add(new ExplosionParticle(x, y, vx, vy, color, GameConfig.Effects.Explosion.LIFETIME_MIN + rand.nextDouble() * (GameConfig.Effects.Explosion.LIFETIME_MAX - GameConfig.Effects.Explosion.LIFETIME_MIN)));
         }
 
         // Shockwave
@@ -54,17 +54,17 @@ public class ParticleSystem {
         // Sparks
         for (int i = 0; i < intensity * 3; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
-            double speed = 100 + rand.nextDouble() * 200;
+            double speed = GameConfig.Effects.Spark.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Spark.SPEED_MAX - GameConfig.Effects.Spark.SPEED_MIN);
             double vx = Math.cos(angle) * speed;
             double vy = Math.sin(angle) * speed;
-            particles.add(new SparkParticle(x, y, vx, vy, 0.3 + rand.nextDouble() * 0.2));
+            particles.add(new SparkParticle(x, y, vx, vy, GameConfig.Effects.Spark.LIFETIME_MIN + rand.nextDouble() * (GameConfig.Effects.Spark.LIFETIME_MAX - GameConfig.Effects.Spark.LIFETIME_MIN)));
         }
     }
 
     public synchronized void createDebris(double x, double y, int count) {
         for (int i = 0; i < count; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
-            double speed = 20 + rand.nextDouble() * 80;
+            double speed = GameConfig.Effects.Debris.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Debris.SPEED_MAX - GameConfig.Effects.Debris.SPEED_MIN);
             double vx = Math.cos(angle) * speed;
             double vy = Math.sin(angle) * speed;
 
@@ -74,27 +74,27 @@ public class ParticleSystem {
                 60 + rand.nextInt(60)
             );
 
-            particles.add(new DebrisParticle(x, y, vx, vy, debrisColor, 2.0 + rand.nextDouble() * 3.0));
+            particles.add(new DebrisParticle(x, y, vx, vy, debrisColor, GameConfig.Effects.Debris.LIFETIME_MIN + rand.nextDouble() * (GameConfig.Effects.Debris.LIFETIME_MAX - GameConfig.Effects.Debris.LIFETIME_MIN)));
         }
     }
 
     public synchronized void createImpactSparks(double x, double y, double impactAngle) {
         for (int i = 0; i < 5; i++) {
             double spreadAngle = impactAngle + (rand.nextDouble() - 0.5) * Math.PI / 2;
-            double speed = 80 + rand.nextDouble() * 120;
+            double speed = GameConfig.Effects.Spark.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Spark.SPEED_MAX - GameConfig.Effects.Spark.SPEED_MIN);
             double vx = Math.cos(spreadAngle) * speed;
             double vy = Math.sin(spreadAngle) * speed;
-            particles.add(new SparkParticle(x, y, vx, vy, 0.2 + rand.nextDouble() * 0.1));
+            particles.add(new SparkParticle(x, y, vx, vy, GameConfig.Effects.Spark.LIFETIME_MIN + rand.nextDouble() * (GameConfig.Effects.Spark.LIFETIME_MAX - GameConfig.Effects.Spark.LIFETIME_MIN)));
         }
     }
 
     public synchronized void createWarpEffect(double x, double y) {
         for (int i = 0; i < 20; i++) {
             double angle = rand.nextDouble() * 2 * Math.PI;
-            double speed = 30 + rand.nextDouble() * 70;
+            double speed = GameConfig.Effects.Warp.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Warp.SPEED_MAX - GameConfig.Effects.Warp.SPEED_MIN);
             double vx = Math.cos(angle) * speed;
             double vy = Math.sin(angle) * speed;
-            particles.add(new WarpParticle(x, y, vx, vy, 1.0));
+            particles.add(new WarpParticle(x, y, vx, vy, GameConfig.Effects.Warp.LIFETIME));
         }
     }
 
