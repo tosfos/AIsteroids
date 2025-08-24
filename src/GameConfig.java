@@ -1,3 +1,5 @@
+import java.awt.Color;
+
 /**
  * Centralized configuration for all game constants and settings.
  * This replaces magic numbers scattered throughout the codebase.
@@ -115,6 +117,16 @@ public final class GameConfig {
 
     // === VISUAL EFFECTS SETTINGS ===
     public static final class Effects {
+        // Ship visual settings
+        public static final class Ship {
+            public static final double FLAME_BASE_LENGTH = 15.0;
+            public static final double FLAME_VARIATION = 5.0;
+            public static final double FLAME_ANIMATION_SPEED = 0.05;
+            public static final Color SHIP_GLOW_COLOR = new Color(0, 255, 255, 200);
+            public static final Color SHIP_INNER_GLOW_COLOR = new Color(255, 255, 255, 100);
+            public static final float SHIP_GLOW_THICKNESS = 2.5f;
+            public static final float SHIP_INNER_GLOW_THICKNESS = 1.0f;
+        }
         // General particle settings
         public static final int EXPLOSION_PARTICLES_PER_SIZE = 8;
         public static final int DEBRIS_PARTICLES_PER_SIZE = 3;
@@ -190,14 +202,43 @@ public final class GameConfig {
 
     // === UI SETTINGS ===
     public static final class UI {
+        // Font settings
         public static final String FONT_NAME = "Orbitron";
         public static final String FALLBACK_FONT_NAME = "Arial";
         public static final int HUD_FONT_SIZE = 16;
         public static final int TITLE_FONT_SIZE = 48;
         public static final int SUBTITLE_FONT_SIZE = 24;
-        public static final int LIVES_DISPLAY_SPACING = 25;
+        public static final int POWER_UP_MESSAGE_FONT_SIZE = 20;
+
+        // HUD layout
         public static final int HUD_MARGIN = 10;
+        public static final int HUD_WIDTH = 250;
+        public static final int HUD_HEIGHT = 125;
         public static final int HUD_LINE_HEIGHT = 25;
+        public static final int LIVES_DISPLAY_SPACING = 25;
+        public static final int LIVES_ICON_X = 80;
+        public static final int LIVES_ICON_Y = 20;
+        public static final int SCORE_TEXT_Y = 50;
+        public static final int WAVE_TEXT_Y = 75;
+        public static final int ASTEROIDS_TEXT_Y = 100;
+        public static final int POWER_UPS_TEXT_Y = 125;
+
+        // Power-up display
+        public static final double POWER_UP_MESSAGE_DURATION = 3.0;
+        public static final int POWER_UP_MESSAGE_Y = 150;
+        public static final int POWER_UP_ICON_SIZE = 20;
+        public static final int POWER_UP_ICON_SPACING = 25;
+        public static final int POWER_UP_ICON_X = 10;
+        public static final int POWER_UP_ICON_Y = 135;
+        public static final float POWER_UP_MIN_ALPHA = 0.3f;
+
+        // HUD Colors
+        public static final Color HUD_TEXT_COLOR = new Color(255, 255, 255, 200);
+        public static final Color HUD_BORDER_COLOR = new Color(0, 255, 255, 50);
+        public static final Color SCORE_TEXT_COLOR = new Color(255, 255, 0);
+        public static final Color SCORE_GLOW_COLOR = new Color(255, 255, 0, 100);
+        public static final Color BOSS_TEXT_COLOR = new Color(255, 100, 100, 200);
+        public static final Color NORMAL_WAVE_COLOR = new Color(100, 255, 100, 200);
     }
 
     // === LEADERBOARD SETTINGS ===

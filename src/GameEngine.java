@@ -420,17 +420,21 @@ public class GameEngine implements Runnable {
     }
 
         private void updateMusicIntensity() {
-        // Count asteroids
-        int asteroidCount = 0;
-        boolean hasPowerUp = false;
-
+        // Use a snapshot of game objects to minimize lock contention
+        List<GameObject> snapshot;
+        boolean hasPowerUp;
+        
         synchronized(lock) {
-            for (GameObject obj : gameObjects) {
-                if (obj instanceof Asteroid) {
-                    asteroidCount++;
-                }
-            }
+            snapshot = new ArrayList<>(gameObjects);
             hasPowerUp = !player.getActivePowerUps().isEmpty();
+        }
+
+        // Count asteroids outside the synchronized block
+        int asteroidCount = 0;
+        for (GameObject obj : snapshot) {
+            if (obj instanceof Asteroid) {
+                asteroidCount++;
+            }
         }
 
         MusicSystem.updateMusicIntensity(asteroidCount, player.getLives(), hasPowerUp);
@@ -438,28 +442,41 @@ public class GameEngine implements Runnable {
 
     private void spawnWaveAsteroids() {
         int asteroidsToSpawn = waveSystem.getAsteroidsRemaining();
-        for (int i = 0; i < asteroidsToSpawn; i++) {
-            WaveSystem.AsteroidSpawnInfo spawnInfo = waveSystem.getSpawnInfo();
-            Asteroid asteroid = createAsteroidWithDifficulty(spawnInfo);
-            addGameObject(asteroid);
+        synchronized(lock) {
+            try {
+                for (int i = 0; i < asteroidsToSpawn; i++) {
+                    WaveSystem.AsteroidSpawnInfo spawnInfo = waveSystem.getSpawnInfo();
+                    Asteroid asteroid = createAsteroidWithDifficulty(spawnInfo);
+                    addGameObject(asteroid);
+                }
+            } catch (Exception e) {
+                System.err.println("Error spawning asteroids: " + e.getMessage());
+                throw e; // Propagate to allow caller to handle wave system sync
+            }
         }
     }
 
     private void checkAndSpawnAsteroids() {
-        // Count current asteroids
-        int currentAsteroids = 0;
+        // Count current asteroids and handle wave completion atomically
         synchronized(lock) {
+            int currentAsteroids = 0;
             for (GameObject obj : gameObjects) {
                 if (obj instanceof Asteroid) {
                     currentAsteroids++;
                 }
             }
-        }
 
-        // If no asteroids remain and wave is in progress, complete the wave
-        if (currentAsteroids == 0 && waveSystem.isWaveInProgress()) {
-            waveSystem.asteroidDestroyed(); // This will trigger wave completion
-            spawnWaveAsteroids(); // Spawn next wave
+            // If no asteroids remain and wave is in progress, complete the wave
+            if (currentAsteroids == 0 && waveSystem.isWaveInProgress()) {
+                waveSystem.asteroidDestroyed(); // This will trigger wave completion
+                try {
+                    spawnWaveAsteroids(); // Spawn next wave
+                } catch (Exception e) {
+                    System.err.println("Error spawning wave asteroids: " + e.getMessage());
+                    // Ensure wave system stays in sync even if spawn fails
+                    waveSystem.reset();
+                }
+            }
         }
     }
 

@@ -5,25 +5,40 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MusicSystem {
     private static Sequencer sequencer;
+    private static Synthesizer synthesizer;
     private static final AtomicBoolean musicPlaying = new AtomicBoolean(false);
     private static final AtomicInteger intensityLevel = new AtomicInteger(1);
     private static float masterVolume = GameConfig.Audio.MUSIC_MASTER_VOLUME_DEFAULT;
+    private static boolean midiAvailable = false;
+
+    static {
+        try {
+            // Check MIDI system availability at startup
+            sequencer = MidiSystem.getSequencer();
+            synthesizer = MidiSystem.getSynthesizer();
+            synthesizer.open();
+            midiAvailable = true;
+        } catch (MidiUnavailableException e) {
+            System.err.println("MIDI system unavailable: " + e.getMessage());
+            midiAvailable = false;
+        }
+    }
 
     public static void startMusic() {
-        if (!musicPlaying.get()) {
-            try {
+        if (!midiAvailable || musicPlaying.get()) {
+            return;
+        }
+        try {
             musicPlaying.set(true);
-                sequencer = MidiSystem.getSequencer();
-                sequencer.open();
-                Sequence sequence = createAmbientSequence();
-                sequencer.setSequence(sequence);
-                sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-                updateTempoAndVolume();
-                sequencer.start();
-            } catch (Exception e) {
-                System.err.println("Error starting music: " + e.getMessage());
-                musicPlaying.set(false);
-            }
+            sequencer.open();
+            Sequence sequence = createAmbientSequence();
+            sequencer.setSequence(sequence);
+            sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+            updateTempoAndVolume();
+            sequencer.start();
+        } catch (Exception e) {
+            System.err.println("Error starting music: " + e.getMessage());
+            musicPlaying.set(false);
         }
     }
 
@@ -32,6 +47,9 @@ public class MusicSystem {
         if (sequencer != null && sequencer.isOpen()) {
             sequencer.stop();
             sequencer.close();
+        }
+        if (synthesizer != null && synthesizer.isOpen()) {
+            synthesizer.close();
         }
     }
 
@@ -46,21 +64,23 @@ public class MusicSystem {
     }
 
     private static void updateTempoAndVolume() {
-        if (sequencer != null) {
+        if (!midiAvailable || sequencer == null || synthesizer == null) {
+            return;
+        }
+
         int intensity = intensityLevel.get();
-            // Tempo based on intensity
-            int bpm = GameConfig.Audio.MUSIC_BPM_BASE + (intensity * GameConfig.Audio.MUSIC_BPM_PER_LEVEL);
-            sequencer.setTempoInBPM(bpm);
-            // Volume adjustment
-            try {
-                MidiChannel[] channels = MidiSystem.getSynthesizer().getChannels();
-                for (MidiChannel channel : channels) {
-                    if (channel != null) {
-                        channel.controlChange(7, (int)(127 * masterVolume * (GameConfig.Audio.MUSIC_VOLUME_BASE + intensity * GameConfig.Audio.MUSIC_VOLUME_PER_LEVEL)));
-                    }
+        // Tempo based on intensity
+        int bpm = GameConfig.Audio.MUSIC_BPM_BASE + (intensity * GameConfig.Audio.MUSIC_BPM_PER_LEVEL);
+        sequencer.setTempoInBPM(bpm);
+
+        // Volume adjustment using cached synthesizer
+        MidiChannel[] channels = synthesizer.getChannels();
+        if (channels != null) {
+            for (MidiChannel channel : channels) {
+                if (channel != null) {
+                    channel.controlChange(7, (int)(127 * masterVolume * 
+                        (GameConfig.Audio.MUSIC_VOLUME_BASE + intensity * GameConfig.Audio.MUSIC_VOLUME_PER_LEVEL)));
                 }
-            } catch (MidiUnavailableException e) {
-                System.err.println("Error adjusting volume: " + e.getMessage());
             }
         }
     }

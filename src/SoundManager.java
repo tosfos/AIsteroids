@@ -10,7 +10,11 @@ public class SoundManager {
     private static final int CHANNELS = GameConfig.Audio.SFX_CHANNELS; // Stereo
 
     // Executor for playing sounds asynchronously.
-    private static final ExecutorService soundExecutor = Executors.newCachedThreadPool();
+    private static final ExecutorService soundExecutor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "SoundThread");
+        t.setDaemon(true);  // Make sound threads daemon threads
+        return t;
+    });
     private static final Random random = new Random();
 
     // Master volume control
@@ -105,10 +109,29 @@ public class SoundManager {
         ambientPlaying.set(false);
         if (ambientLine != null) {
             ambientLine.stop();
+            ambientLine.close();
+            ambientLine = null;
+        }
+    }
+
+    private static volatile boolean isSoundSystemActive = true;
+
+    public static void shutdown() {
+        isSoundSystemActive = false;
+        stopAmbientSpace();
+        soundExecutor.shutdown();
+        try {
+            if (!soundExecutor.awaitTermination(500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                soundExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            soundExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 
     private static void playSound(byte[] soundData, float volume) {
+        if (!isSoundSystemActive) return;  // Don't play sounds if system is shutting down
         soundExecutor.submit(() -> {
             try {
                 DataLine.Info info = new DataLine.Info(SourceDataLine.class, AUDIO_FORMAT);

@@ -175,7 +175,7 @@ public class LeaderboardSystem {
     }
 
     public static void unlockAchievement(Achievement achievement) {
-        String name = achievement.getName();
+        String name = achievement.name();  // Use enum constant name instead of display name
         if (!unlockedAchievements.contains(name)) {
             unlockedAchievements.add(name);
             saveAchievements();
@@ -184,7 +184,7 @@ public class LeaderboardSystem {
     }
 
     public static boolean isAchievementUnlocked(Achievement achievement) {
-        return unlockedAchievements.contains(achievement.getName());
+        return unlockedAchievements.contains(achievement.name());
     }
 
     public static Set<Achievement> getUnlockedAchievements() {
@@ -193,7 +193,7 @@ public class LeaderboardSystem {
             try {
                 result.add(Achievement.valueOf(name));
             } catch (IllegalArgumentException e) {
-                // ignore invalid
+                System.err.println("Warning: Found invalid achievement in storage: " + name);
             }
         }
         return result;
@@ -202,7 +202,7 @@ public class LeaderboardSystem {
     public static List<Achievement> getLockedAchievements() {
         List<Achievement> locked = new ArrayList<>();
         for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement.getName())) {
+            if (!unlockedAchievements.contains(achievement.name())) {
                 locked.add(achievement);
             }
         }
