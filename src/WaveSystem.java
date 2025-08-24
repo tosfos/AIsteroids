@@ -40,13 +40,15 @@ public class WaveSystem {
     }
 
     private int calculateNormalWaveAsteroids() {
-        // Base: 5 asteroids, increases by 2 every wave, max 25
-        return Math.min(25, 5 + (currentWave - 1) * 2);
+        // Base asteroids increase each wave
+        return Math.min(GameConfig.Wave.MAX_NORMAL_ASTEROIDS,
+                        GameConfig.Wave.BASE_ASTEROIDS + (currentWave - 1) * GameConfig.Wave.ASTEROID_INCREMENT);
     }
 
     private int calculateBossWaveAsteroids() {
         // Boss waves have fewer but larger asteroids
-        return Math.min(15, 3 + currentWave / 2);
+        return Math.min(GameConfig.Wave.MAX_BOSS_ASTEROIDS,
+                        GameConfig.Wave.BASE_BOSS_ASTEROIDS + currentWave / 2);
     }
 
     public void asteroidDestroyed() {
@@ -72,8 +74,8 @@ public class WaveSystem {
         }
 
         // Speed bonus (completed quickly)
-        if (waveTime < 30000) { // Under 30 seconds
-            bonus += 500 * scoreMultiplier;
+        if (waveTime < GameConfig.Wave.SPEED_BONUS_TIME) {
+            bonus += GameConfig.Wave.SPEED_BONUS_POINTS * scoreMultiplier;
         }
 
         // Boss wave bonus
@@ -95,7 +97,7 @@ public class WaveSystem {
         if (bossWave) {
             // Boss waves spawn larger, more dangerous asteroids
             info.size = 3; // Always large
-            info.speed = 30 + (difficultyMultiplier * 20);
+            info.speed = GameConfig.Wave.BOSS_BASE_SPEED + (difficultyMultiplier * GameConfig.Wave.BOSS_SPEED_MULTIPLIER);
             info.splitCount = 3; // Split into 3 instead of 2
         } else {
             // Normal waves have mixed asteroid sizes
@@ -106,7 +108,8 @@ public class WaveSystem {
                 info.size = 1 + rand.nextInt(3);
             }
 
-            info.speed = (20 + currentWave * 5) + (rand.nextDouble() * 30);
+            info.speed = (GameConfig.Wave.NORMAL_BASE_SPEED + currentWave * GameConfig.Wave.NORMAL_SPEED_INCREMENT)
+                         + (rand.nextDouble() * GameConfig.Wave.NORMAL_SPEED_VARIATION);
             info.splitCount = 2;
         }
 
@@ -120,15 +123,16 @@ public class WaveSystem {
         PowerUpSpawnInfo info = new PowerUpSpawnInfo();
 
         // Higher waves spawn power-ups more frequently
-        info.spawnChance = Math.min(0.4, 0.1 + (currentWave * 0.03));
+        info.spawnChance = Math.min(GameConfig.Wave.POWER_UP_MAX_CHANCE,
+                                    GameConfig.Wave.POWER_UP_BASE_CHANCE + (currentWave * GameConfig.Wave.POWER_UP_CHANCE_INCREMENT));
 
         // Boss waves guarantee power-up spawns
         if (bossWave) {
-            info.spawnChance = 0.8;
+            info.spawnChance = GameConfig.Wave.POWER_UP_BOSS_CHANCE;
         }
 
         // Later waves favor more powerful power-ups
-        if (currentWave >= 10) {
+        if (currentWave >= GameConfig.Wave.POWER_UP_RARE_WAVE) {
             info.favorRare = true;
         }
 

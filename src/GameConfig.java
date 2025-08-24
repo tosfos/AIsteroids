@@ -70,17 +70,33 @@ public final class GameConfig {
 
     // === WAVE SYSTEM SETTINGS ===
     public static final class Wave {
+        // Wave progression
         public static final int BOSS_WAVE_INTERVAL = 5; // every 5th wave
-        public static final double POWER_UP_BASE_CHANCE = 0.2; // 20% base chance
-        public static final double POWER_UP_CHANCE_INCREMENT = 0.05; // +5% per wave
-        public static final double POWER_UP_MAX_CHANCE = 0.8; // 80% max chance
+        public static final int BASE_ASTEROIDS = 5; // Starting number of asteroids
+        public static final int ASTEROID_INCREMENT = 2; // Additional asteroids per wave
+        public static final int MAX_NORMAL_ASTEROIDS = 25; // Maximum asteroids in normal waves
+        public static final int BASE_BOSS_ASTEROIDS = 3; // Starting number of boss wave asteroids
+        public static final int MAX_BOSS_ASTEROIDS = 15; // Maximum asteroids in boss waves
+
+        // Scoring and bonuses
         public static final int SCORE_MULTIPLIER_MAX = 5; // maximum score multiplier
         public static final double PERFECT_WAVE_BONUS = 1.5; // 50% bonus
-        public static final double SPEED_BONUS_THRESHOLD = 30.0; // seconds
-        public static final double SPEED_BONUS_MULTIPLIER = 1.2; // 20% bonus
-        public static final int ASTEROIDS_PER_WAVE_BASE = 4;
-        public static final int ASTEROIDS_PER_WAVE_INCREMENT = 2;
-        public static final int ASTEROIDS_MAX_PER_WAVE = 15;
+        public static final int SPEED_BONUS_TIME = 30000; // milliseconds
+        public static final int SPEED_BONUS_POINTS = 500; // Points for speed bonus
+
+        // Asteroid spawning
+        public static final double BOSS_BASE_SPEED = 30.0; // Base speed for boss wave asteroids
+        public static final double BOSS_SPEED_MULTIPLIER = 20.0; // Speed multiplier for boss waves
+        public static final double NORMAL_BASE_SPEED = 20.0; // Base speed for normal asteroids
+        public static final double NORMAL_SPEED_INCREMENT = 5.0; // Speed increase per wave
+        public static final double NORMAL_SPEED_VARIATION = 30.0; // Random speed variation
+
+        // Power-up spawning
+        public static final double POWER_UP_BASE_CHANCE = 0.1; // Base spawn chance
+        public static final double POWER_UP_CHANCE_INCREMENT = 0.03; // Increment per wave
+        public static final double POWER_UP_MAX_CHANCE = 0.4; // Maximum spawn chance
+        public static final double POWER_UP_BOSS_CHANCE = 0.8; // Boss wave spawn chance
+        public static final int POWER_UP_RARE_WAVE = 10; // Wave number when rare power-ups start appearing
     }
 
     // === SCORING SETTINGS ===
