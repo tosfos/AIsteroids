@@ -24,7 +24,7 @@ public class GamePanel extends JPanel implements KeyListener {
     // Power-up message system
     private String powerUpMessage = "";
     private double powerUpMessageTimer = 0;
-    private static final double POWER_UP_MESSAGE_DURATION = 3.0; // 3 seconds
+    private static final double POWER_UP_MESSAGE_DURATION = GameConfig.UI.POWER_UP_MESSAGE_DURATION;
     private Font powerUpMessageFont;
 
     // Help system
@@ -50,16 +50,16 @@ public class GamePanel extends JPanel implements KeyListener {
 
        // Initialize fonts
        try {
-           hudFont = new Font("Orbitron", Font.BOLD, 16);
-           titleFont = new Font("Orbitron", Font.BOLD, 48);
-           subtitleFont = new Font("Orbitron", Font.PLAIN, 24);
-           powerUpMessageFont = new Font("Orbitron", Font.BOLD, 20);
+           hudFont = new Font(GameConfig.UI.FONT_NAME, Font.BOLD, GameConfig.UI.HUD_FONT_SIZE);
+           titleFont = new Font(GameConfig.UI.FONT_NAME, Font.BOLD, GameConfig.UI.TITLE_FONT_SIZE);
+           subtitleFont = new Font(GameConfig.UI.FONT_NAME, Font.PLAIN, GameConfig.UI.SUBTITLE_FONT_SIZE);
+           powerUpMessageFont = new Font(GameConfig.UI.FONT_NAME, Font.BOLD, GameConfig.UI.POWER_UP_MESSAGE_FONT_SIZE);
        } catch (Exception e) {
            // Fallback fonts
-           hudFont = new Font("Arial", Font.BOLD, 16);
-           titleFont = new Font("Arial", Font.BOLD, 48);
-           subtitleFont = new Font("Arial", Font.PLAIN, 24);
-           powerUpMessageFont = new Font("Arial", Font.BOLD, 20);
+           hudFont = new Font(GameConfig.UI.FALLBACK_FONT_NAME, Font.BOLD, GameConfig.UI.HUD_FONT_SIZE);
+           titleFont = new Font(GameConfig.UI.FALLBACK_FONT_NAME, Font.BOLD, GameConfig.UI.TITLE_FONT_SIZE);
+           subtitleFont = new Font(GameConfig.UI.FALLBACK_FONT_NAME, Font.PLAIN, GameConfig.UI.SUBTITLE_FONT_SIZE);
+           powerUpMessageFont = new Font(GameConfig.UI.FALLBACK_FONT_NAME, Font.BOLD, GameConfig.UI.POWER_UP_MESSAGE_FONT_SIZE);
        }
 
        setFocusable(true);
@@ -232,28 +232,28 @@ public class GamePanel extends JPanel implements KeyListener {
         g.drawString("LIVES:", 10, 25);
 
         for (int i = 0; i < player.getLives(); i++) {
-            drawMiniShip(g, 80 + i * 25, 20);
+            drawMiniShip(g, GameConfig.UI.LIVES_ICON_X + i * GameConfig.UI.LIVES_DISPLAY_SPACING, GameConfig.UI.LIVES_ICON_Y);
         }
 
         // Score with glow effect
         String scoreText = "SCORE: " + String.format("%06d", engine.getScore());
-        drawGlowText(g, scoreText, 10, 50, new Color(255, 255, 0), new Color(255, 255, 0, 100));
+        drawGlowText(g, scoreText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.SCORE_TEXT_Y, GameConfig.UI.SCORE_TEXT_COLOR, GameConfig.UI.SCORE_GLOW_COLOR);
 
         // Wave information
         WaveSystem waveSystem = engine.getWaveSystem();
         String waveText = "WAVE: " + waveSystem.getCurrentWave();
         if (waveSystem.isBossWave()) {
             waveText += " [BOSS]";
-            g.setColor(new Color(255, 100, 100, 200));
+            g.setColor(GameConfig.UI.BOSS_TEXT_COLOR);
         } else {
-            g.setColor(new Color(100, 255, 100, 200));
+            g.setColor(GameConfig.UI.NORMAL_WAVE_COLOR);
         }
-        g.drawString(waveText, 10, 75);
+        g.drawString(waveText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.WAVE_TEXT_Y);
 
         // Asteroids remaining
         String asteroidsText = "ASTEROIDS: " + waveSystem.getAsteroidsRemaining();
-        g.setColor(new Color(255, 255, 255, 200));
-        g.drawString(asteroidsText, 10, 100);
+        g.setColor(GameConfig.UI.HUD_TEXT_COLOR);
+        g.drawString(asteroidsText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.ASTEROIDS_TEXT_Y);
 
         // Score multiplier indicator
         if (waveSystem.getScoreMultiplier() > 1) {
@@ -268,9 +268,9 @@ public class GamePanel extends JPanel implements KeyListener {
         drawPowerUpStatusIcons(g);
 
         // Add a subtle border effect
-        g.setColor(new Color(0, 255, 255, 50));
+        g.setColor(GameConfig.UI.HUD_BORDER_COLOR);
         g.setStroke(new BasicStroke(2));
-        g.drawRect(5, 5, 250, 125);
+        g.drawRect(GameConfig.UI.HUD_MARGIN - 5, GameConfig.UI.HUD_MARGIN - 5, GameConfig.UI.HUD_WIDTH, GameConfig.UI.HUD_HEIGHT);
     }
 
     private void drawPowerUpMessage(Graphics2D g) {
@@ -283,7 +283,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         // Position message in center-top area
         int x = (getWidth() - fm.stringWidth(powerUpMessage)) / 2;
-        int y = 150;
+        int y = GameConfig.UI.POWER_UP_MESSAGE_Y;
 
         // Calculate fade effect for last second
         float alpha = 1.0f;
@@ -346,7 +346,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
             // Calculate fade based on remaining time
             float progress = (float) (timeRemaining / totalDuration);
-            float alpha = Math.max(0.3f, progress); // Minimum 30% alpha so it's still visible
+            float alpha = Math.max(GameConfig.UI.POWER_UP_MIN_ALPHA, progress); // Minimum alpha so it's still visible
 
             // Draw icon background circle
             Color iconColor = type.getColor();
@@ -691,11 +691,11 @@ public class GamePanel extends JPanel implements KeyListener {
         }
 
         public void update() {
-            x += vx * 0.016; // Assuming ~60 FPS
-            y += vy * 0.016;
+            x += vx * GameConfig.FRAME_TIME_MS / 1000.0; // Convert to seconds
+            y += vy * GameConfig.FRAME_TIME_MS / 1000.0;
             vx *= 0.98; // Friction
             vy *= 0.98;
-            life -= 0.016;
+            life -= GameConfig.FRAME_TIME_MS / 1000.0;
             size *= 0.99;
         }
 

@@ -142,13 +142,13 @@ public class PlayerShip extends GameObject {
         g.fill(highlight);
 
         // Draw ship outline with glowing effect
-        g.setPaint(new Color(0, 255, 255, 200));
-        g.setStroke(new BasicStroke(2.5f));
+        g.setPaint(GameConfig.Effects.Ship.SHIP_GLOW_COLOR);
+        g.setStroke(new BasicStroke(GameConfig.Effects.Ship.SHIP_GLOW_THICKNESS));
         g.draw(ship);
 
         // Inner glow
-        g.setPaint(new Color(255, 255, 255, 100));
-        g.setStroke(new BasicStroke(1f));
+        g.setPaint(GameConfig.Effects.Ship.SHIP_INNER_GLOW_COLOR);
+        g.setStroke(new BasicStroke(GameConfig.Effects.Ship.SHIP_INNER_GLOW_THICKNESS));
         g.draw(ship);
 
         // If accelerating, draw enhanced flame effect behind the ship
@@ -205,7 +205,7 @@ public class PlayerShip extends GameObject {
 
     private void drawEngineFlame(Graphics2D g) {
         // Create animated flame effect
-        double flameLength = 15 + 5 * Math.sin(System.currentTimeMillis() * 0.05);
+        double flameLength = GameConfig.Effects.Ship.FLAME_BASE_LENGTH + GameConfig.Effects.Ship.FLAME_VARIATION * Math.sin(System.currentTimeMillis() * GameConfig.Effects.Ship.FLAME_ANIMATION_SPEED);
 
         // Main flame
         GeneralPath flame = new GeneralPath();
