@@ -1,5 +1,13 @@
 import java.util.Random;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
 
+/**
+ * Manages wave progression, adaptive difficulty, and wave-based statistics.
+ */
 public class WaveSystem {
     private int currentWave = 1;
     private int asteroidsRemaining = 0;
@@ -7,29 +15,42 @@ public class WaveSystem {
     private boolean bossWave = false;
     private double difficultyMultiplier = 1.0;
     private int scoreMultiplier = 1;
-    private long waveStartTime = 0;
     private Random rand = new Random();
 
-    // Wave completion bonuses
-    private int waveCompletionBonus = 1000;
-    private boolean perfectWave = true; // No damage taken this wave
+    // Current wave stats
+    private WaveStats currentStats;
+    private Queue<WaveStats> recentStats;
+    private List<WaveStats> historicalStats;
 
     public WaveSystem() {
+        recentStats = new LinkedList<>();
+        historicalStats = new ArrayList<>();
         startWave(1);
     }
 
     public void startWave(int waveNumber) {
         currentWave = waveNumber;
         waveInProgress = true;
-        waveStartTime = System.currentTimeMillis();
-        perfectWave = true;
+        bossWave = (waveNumber % GameConfig.Wave.BOSS_WAVE_INTERVAL == 0);
 
-        // Determine if this is a boss wave (every 5th wave)
-        bossWave = (waveNumber % 5 == 0);
+        // Create new wave stats
+        currentStats = new WaveStats(waveNumber, bossWave);
 
-        // Calculate difficulty scaling
-        difficultyMultiplier = 1.0 + (waveNumber - 1) * 0.3;
-        scoreMultiplier = Math.min(10, 1 + (waveNumber - 1) / 3);
+        // Calculate base difficulty using a smoothed logistic curve
+        double x = (waveNumber - 1) * GameConfig.Wave.DIFFICULTY_SMOOTHING_FACTOR;
+        double baseDifficulty = GameConfig.Wave.BASE_DIFFICULTY + 
+            (GameConfig.Wave.MAX_DIFFICULTY - GameConfig.Wave.BASE_DIFFICULTY) * 
+            (1.0 / (1.0 + Math.exp(-x)));
+
+        // Apply performance-based adjustment and clamp final difficulty within allowed range
+        double performanceModifier = calculatePerformanceModifier();
+        double adjusted = baseDifficulty * performanceModifier;
+        difficultyMultiplier = Math.max(GameConfig.Wave.BASE_DIFFICULTY,
+            Math.min(GameConfig.Wave.MAX_DIFFICULTY, adjusted));
+
+        // Calculate score multiplier (capped but not affected by performance)
+        scoreMultiplier = Math.min(GameConfig.Wave.SCORE_MULTIPLIER_MAX, 
+            1 + (waveNumber - 1) / 3);
 
         // Calculate asteroids for this wave
         if (bossWave) {
@@ -58,22 +79,23 @@ public class WaveSystem {
         }
     }
 
-        private void completeWave() {
+    private void completeWave() {
         waveInProgress = false;
-        long waveTime = System.currentTimeMillis() - waveStartTime;
 
-        // Track wave completion in leaderboard system
-        LeaderboardSystem.waveCompleted(currentWave, perfectWave, bossWave, waveTime);
+        // Record final stats
+        long waveTime = currentStats.getWaveTime();
+        LeaderboardSystem.waveCompleted(currentWave, currentStats.isPerfectWave(), 
+            bossWave, waveTime);
 
         // Calculate wave completion bonus
-        int bonus = waveCompletionBonus * scoreMultiplier;
+        int bonus = GameConfig.Scoring.WAVE_COMPLETION_BONUS * scoreMultiplier;
 
-        // Perfect wave bonus (no damage taken)
-        if (perfectWave) {
+        // Perfect wave bonus
+        if (currentStats.isPerfectWave()) {
             bonus *= 2;
         }
 
-        // Speed bonus (completed quickly)
+        // Speed bonus
         if (waveTime < GameConfig.Wave.SPEED_BONUS_TIME) {
             bonus += GameConfig.Wave.SPEED_BONUS_POINTS * scoreMultiplier;
         }
@@ -83,12 +105,33 @@ public class WaveSystem {
             bonus *= 3;
         }
 
-        // Start next wave after brief pause
+        // Update stats history
+        recentStats.offer(currentStats);
+        historicalStats.add(currentStats);
+        while (recentStats.size() > GameConfig.Wave.PERFORMANCE_HISTORY_SIZE) {
+            recentStats.poll();
+        }
+
+        // Start next wave
         startWave(currentWave + 1);
     }
 
     public void playerDamaged() {
-        perfectWave = false;
+        if (currentStats != null) {
+            currentStats.recordHit();
+        }
+    }
+
+    public void recordBulletShot() {
+        if (currentStats != null) {
+            currentStats.recordBulletShot();
+        }
+    }
+
+    public void recordPowerUpCollected() {
+        if (currentStats != null) {
+            currentStats.recordPowerUpCollected();
+        }
     }
 
     public AsteroidSpawnInfo getSpawnInfo() {
@@ -164,19 +207,16 @@ public class WaveSystem {
     }
 
     public boolean isPerfectWave() {
-        return perfectWave;
+        return currentStats != null && currentStats.isPerfectWave();
     }
 
     public long getWaveTime() {
-        if (waveInProgress) {
-            return System.currentTimeMillis() - waveStartTime;
-        }
-        return 0;
+        return currentStats != null ? currentStats.getWaveTime() : 0;
     }
 
     public int getWaveCompletionBonus() {
-        int bonus = waveCompletionBonus * scoreMultiplier;
-        if (perfectWave) bonus *= 2;
+        int bonus = GameConfig.Scoring.WAVE_COMPLETION_BONUS * scoreMultiplier;
+        if (isPerfectWave()) bonus *= 2;
         if (bossWave) bonus *= 3;
         return bonus;
     }
@@ -188,8 +228,57 @@ public class WaveSystem {
         bossWave = false;
         difficultyMultiplier = 1.0;
         scoreMultiplier = 1;
-        perfectWave = true;
+
+        // Clear stats
+        currentStats = null;
+        recentStats.clear();
+        historicalStats.clear();
+
         startWave(1);
+    }
+
+    /**
+     * Calculates a performance-based difficulty modifier based on recent wave stats.
+     */
+    private double calculatePerformanceModifier() {
+        if (recentStats.isEmpty()) {
+            return 1.0; // No adjustment for first wave
+        }
+
+        // Calculate average performance over recent waves
+        double totalPerformance = 0.0;
+        int count = 0;
+        for (WaveStats stats : recentStats) {
+            totalPerformance += stats.getWavePerformance();
+            count++;
+        }
+        double avgPerformance = totalPerformance / count;
+
+        // Convert to difficulty modifier
+        // Performance > 0.5 increases difficulty, < 0.5 decreases it
+        double performanceDelta = (avgPerformance - 0.5) * GameConfig.Wave.PERFORMANCE_SCALE_FACTOR;
+        return 1.0 + performanceDelta;
+    }
+
+    /**
+     * Gets the stats for the current wave.
+     */
+    public WaveStats getCurrentWaveStats() {
+        return currentStats;
+    }
+
+    /**
+     * Gets a list of recent wave stats.
+     */
+    public List<WaveStats> getRecentWaveStats() {
+        return new ArrayList<>(recentStats);
+    }
+
+    /**
+     * Gets all historical wave stats.
+     */
+    public List<WaveStats> getHistoricalWaveStats() {
+        return Collections.unmodifiableList(historicalStats);
     }
 
     // Helper classes for spawn information

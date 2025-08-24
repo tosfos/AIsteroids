@@ -160,11 +160,52 @@ public class EdgeCaseTestSuite {
         });
 
         testCase("Difficulty multiplier increases with waves", () -> {
-            waveSystem.startWave(1);
-            double diff1 = waveSystem.getDifficultyMultiplier();
-            waveSystem.startWave(10);
-            double diff10 = waveSystem.getDifficultyMultiplier();
-            return diff10 > diff1;
+            System.out.println("    Analyzing difficulty progression...");
+            
+            // Test smoothed difficulty progression
+            double lastDiff = 0;
+            boolean increasesFound = false;
+            boolean plateauFound = false;
+            
+            for (int wave = 1; wave <= 20; wave++) {
+                waveSystem.startWave(wave);
+                double currentDiff = waveSystem.getDifficultyMultiplier();
+                
+                if (wave > 1) {
+                    double delta = currentDiff - lastDiff;
+                    System.out.printf("    Wave %2d: Difficulty = %.3f, Delta = %+.3f%n",
+                        wave, currentDiff, delta);
+                    
+                    if (delta > 0.01) {
+                        increasesFound = true;
+                    }
+                    if (Math.abs(delta) < 0.01) {
+                        plateauFound = true;
+                    }
+                } else {
+                    System.out.printf("    Wave %2d: Difficulty = %.3f%n",
+                        wave, currentDiff);
+                }
+                
+                lastDiff = currentDiff;
+            }
+            
+            System.out.printf("    Found increases: %b, Found plateaus: %b%n",
+                increasesFound, plateauFound);
+            
+            // Verify smooth progression: should find both increases and plateaus
+            boolean result = increasesFound && plateauFound &&
+                waveSystem.getDifficultyMultiplier() <= GameConfig.Wave.MAX_DIFFICULTY;
+                
+            if (!result) {
+                System.out.println("    Test failed: " +
+                    (!increasesFound ? "No difficulty increases found. " : "") +
+                    (!plateauFound ? "No difficulty plateaus found. " : "") +
+                    (waveSystem.getDifficultyMultiplier() > GameConfig.Wave.MAX_DIFFICULTY ?
+                        "Difficulty exceeded maximum. " : ""));
+            }
+            
+            return result;
         });
     }
 
