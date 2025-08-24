@@ -206,7 +206,7 @@ public class Asteroid extends GameObject {
        }
 
        double angle = rand.nextDouble() * 2 * Math.PI;
-       double speed = 30 + rand.nextDouble() * 70; // Varied speed
+       double speed = GameConfig.Asteroid.MIN_SPEED + rand.nextDouble() * (GameConfig.Asteroid.MAX_SPEED - GameConfig.Asteroid.MIN_SPEED); // Speed from config
        double vx = speed * Math.cos(angle);
        double vy = speed * Math.sin(angle);
        return new Asteroid(x, y, size, vx, vy);

@@ -5,8 +5,8 @@ import java.util.Random;
 
 /**
  * PowerUp represents collectible items that provide temporary enhancements to the player ship.
- * Power-ups spawn randomly during gameplay, drift across the screen, and disappear after 30 seconds
- * if not collected. Each power-up has unique visual characteristics and gameplay effects.
+ * Power-ups spawn randomly during gameplay, drift across the screen, and disappear after a configurable
+ * time period if not collected. Each power-up has unique visual characteristics and gameplay effects.
  *
  * @author AIsteroids Development Team
  * @version 1.0
@@ -100,7 +100,7 @@ public class PowerUp extends GameObject {
     private double pulsePhase = 0;
 
     /** Total time the power-up remains in the world before disappearing */
-    private double lifespan = 30.0; // 30 seconds before disappearing
+    private double lifespan = GameConfig.PowerUp.LIFETIME; // seconds before disappearing
 
     /** Time this power-up has been alive */
     private double timeAlive = 0;
