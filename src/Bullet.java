@@ -5,8 +5,8 @@ import java.util.List;
 
 public class Bullet extends GameObject {
     private double angle;
-    private double speed = 400; // pixels per second.
-    private double lifespan = 2; // Bullet lasts for 2 seconds.
+    private double speed = GameConfig.Bullet.SPEED; // pixels per second.
+    private double lifespan = GameConfig.Bullet.LIFETIME; // Bullet lifetime from config
     private double timeAlive = 0;
     private List<TrailPoint> trail;
     private int trailLength = 8;
