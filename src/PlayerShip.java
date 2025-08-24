@@ -407,9 +407,9 @@ public class PlayerShip extends GameObject {
                 break;
             case SPEED_BOOST:
                 // Increase ship maneuverability and speed
-                maxSpeed = 500;        // Increased from 300
-                rotationSpeed = Math.toRadians(270);  // Increased from 180°/s
-                acceleration = 400;    // Increased from 200
+                maxSpeed = GameConfig.PowerUp.SPEED_BOOST_MAX_SPEED;
+                rotationSpeed = Math.toRadians(GameConfig.PowerUp.SPEED_BOOST_ROTATION_SPEED_DEGREES);
+                acceleration = GameConfig.PowerUp.SPEED_BOOST_ACCELERATION;
                 break;
             // Other power-ups (RAPID_FIRE, SPREAD_SHOT, MULTI_SHOT, LASER_BEAM)
             // are applied dynamically during fireBullet() calls
@@ -447,9 +447,9 @@ public class PlayerShip extends GameObject {
                     break;
                 case SPEED_BOOST:
                     // Restore normal ship maneuverability
-                    maxSpeed = 300;
-                    rotationSpeed = Math.toRadians(180);
-                    acceleration = 200;
+                    maxSpeed = GameConfig.PlayerShip.MAX_SPEED;
+                    rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
+                    acceleration = GameConfig.PlayerShip.ACCELERATION;
                     break;
                 // Other power-ups don't need explicit cleanup as they're
                 // checked dynamically during fireBullet() calls
@@ -491,7 +491,7 @@ public class PlayerShip extends GameObject {
         turnRight = false;
         accelerating = false;
         // Reset lives and invulnerability
-        lives = 3;
+        lives = GameConfig.PlayerShip.INITIAL_LIVES;
         invulnerabilityTimer = 0;
         // Allow immediate shooting after reset
         lastFireTime = 1.0;

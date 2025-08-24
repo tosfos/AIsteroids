@@ -66,6 +66,11 @@ public final class GameConfig {
         public static final double SHIELD_DURATION = 8.0; // seconds
         public static final double MULTI_SHOT_DURATION = 12.0; // seconds
         public static final double EXTRA_LIFE_RARITY = 0.1; // 10% chance
+
+        // Speed boost effect targets
+        public static final double SPEED_BOOST_MAX_SPEED = 500.0;
+        public static final double SPEED_BOOST_ROTATION_SPEED_DEGREES = 270.0;
+        public static final double SPEED_BOOST_ACCELERATION = 400.0;
     }
 
     // === WAVE SYSTEM SETTINGS ===

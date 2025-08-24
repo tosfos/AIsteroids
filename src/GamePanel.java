@@ -66,18 +66,22 @@ public class GamePanel extends JPanel implements KeyListener {
        addKeyListener(this);
 
        // Use a Swing Timer (executing on the EDT) to repaint at ~60 FPS.
-       Timer timer = new Timer(16, e -> repaint());
+       Timer timer = new Timer(GameConfig.FRAME_TIME_MS, e -> repaint());
        timer.start();
     }
 
     private void initializeStarfield() {
         stars = new ArrayList<>();
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < GameConfig.Effects.STARFIELD_STAR_COUNT; i++) {
+            double size = GameConfig.Effects.STAR_SIZE_MIN +
+                          rand.nextDouble() * (GameConfig.Effects.STAR_SIZE_MAX - GameConfig.Effects.STAR_SIZE_MIN);
+            float brightness = GameConfig.Effects.STAR_BRIGHTNESS_MIN +
+                               rand.nextFloat() * (GameConfig.Effects.STAR_BRIGHTNESS_MAX - GameConfig.Effects.STAR_BRIGHTNESS_MIN);
             stars.add(new Star(
                 rand.nextDouble() * GameEngine.WIDTH,
                 rand.nextDouble() * GameEngine.HEIGHT,
-                rand.nextDouble() * 3 + 1, // Size between 1-4
-                rand.nextFloat() * 0.7f + 0.3f // Brightness between 0.3-1.0
+                size,
+                brightness
             ));
         }
     }
