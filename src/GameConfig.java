@@ -176,6 +176,17 @@ public final class GameConfig {
         public static final float INVULNERABILITY_MAX_ALPHA = 1.0f;
     }
 
+    // === PERFORMANCE SETTINGS ===
+    public static final class Performance {
+        // Frame rate monitoring settings
+        public static final int SAMPLE_SIZE = 60;  // Number of frames to track for FPS calculation
+        public static final double HIGH_MEMORY_THRESHOLD = 0.8;  // 80% memory usage triggers GC
+        public static final double MEDIUM_MEMORY_THRESHOLD = 0.7; // 70% memory usage triggers finalization
+        public static final int GC_PAUSE_MS = 10;  // Sleep time after forced GC
+        public static final double FRAME_TIME_OUTLIER_THRESHOLD = 2.0; // Multiple of average frame time
+        public static final int METRICS_LOG_INTERVAL_MS = 5000; // Log performance metrics every 5 seconds
+    }
+
     // === THREAD SETTINGS ===
     public static final class Threading {
         public static final int WAVE_MANAGER_CHECK_INTERVAL_MS = 3000;
