@@ -5,16 +5,16 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SoundManager {
-    private static final int SAMPLE_RATE = 44100;  // CD quality audio
-    private static final int BITS_PER_SAMPLE = 16;
-    private static final int CHANNELS = 2; // Stereo
+    private static final int SAMPLE_RATE = GameConfig.Audio.SFX_SAMPLE_RATE;  // CD quality audio
+    private static final int BITS_PER_SAMPLE = GameConfig.Audio.SFX_BITS_PER_SAMPLE;
+    private static final int CHANNELS = GameConfig.Audio.SFX_CHANNELS; // Stereo
 
     // Executor for playing sounds asynchronously.
     private static final ExecutorService soundExecutor = Executors.newCachedThreadPool();
     private static final Random random = new Random();
 
     // Master volume control
-    private static float masterVolume = 0.7f;
+    private static float masterVolume = GameConfig.Audio.SFX_MASTER_VOLUME_DEFAULT;
 
     // Background ambient sound
     private static final AtomicBoolean ambientPlaying = new AtomicBoolean(false);

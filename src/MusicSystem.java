@@ -7,7 +7,7 @@ public class MusicSystem {
     private static Sequencer sequencer;
     private static final AtomicBoolean musicPlaying = new AtomicBoolean(false);
     private static final AtomicInteger intensityLevel = new AtomicInteger(1);
-    private static float masterVolume = 0.4f;
+    private static float masterVolume = GameConfig.Audio.MUSIC_MASTER_VOLUME_DEFAULT;
 
     public static void startMusic() {
         if (!musicPlaying.get()) {
@@ -36,7 +36,7 @@ public class MusicSystem {
     }
 
     public static void setIntensity(int level) {
-        intensityLevel.set(Math.max(1, Math.min(5, level)));
+        intensityLevel.set(Math.max(1, Math.min(GameConfig.Audio.MUSIC_INTENSITY_LEVELS, level)));
         updateTempoAndVolume();
     }
 
@@ -48,15 +48,15 @@ public class MusicSystem {
     private static void updateTempoAndVolume() {
         if (sequencer != null) {
         int intensity = intensityLevel.get();
-            // Tempo: 60-100 BPM
-            int bpm = 60 + (intensity * 8);
+            // Tempo based on intensity
+            int bpm = GameConfig.Audio.MUSIC_BPM_BASE + (intensity * GameConfig.Audio.MUSIC_BPM_PER_LEVEL);
             sequencer.setTempoInBPM(bpm);
             // Volume adjustment
             try {
                 MidiChannel[] channels = MidiSystem.getSynthesizer().getChannels();
                 for (MidiChannel channel : channels) {
                     if (channel != null) {
-                        channel.controlChange(7, (int)(127 * masterVolume * (0.6 + intensity * 0.08)));
+                        channel.controlChange(7, (int)(127 * masterVolume * (GameConfig.Audio.MUSIC_VOLUME_BASE + intensity * GameConfig.Audio.MUSIC_VOLUME_PER_LEVEL)));
                     }
                 }
             } catch (MidiUnavailableException e) {
@@ -122,6 +122,6 @@ public class MusicSystem {
         int newIntensity = 1 + (asteroidCount / 5);
         if (playerLives <= 1) newIntensity++;
         if (powerUpActive) newIntensity++;
-        setIntensity(Math.min(5, newIntensity));
+        setIntensity(Math.min(GameConfig.Audio.MUSIC_INTENSITY_LEVELS, newIntensity));
     }
 }

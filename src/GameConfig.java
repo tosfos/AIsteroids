@@ -167,8 +167,20 @@ public final class GameConfig {
 
     // === AUDIO SETTINGS ===
     public static final class Audio {
+        // Music settings
         public static final int MUSIC_INTENSITY_LEVELS = 5;
         public static final double MUSIC_INTENSITY_THRESHOLD = 0.2; // per level
+        public static final float MUSIC_MASTER_VOLUME_DEFAULT = 0.4f;
+        public static final int MUSIC_BPM_BASE = 60;       // Base BPM
+        public static final int MUSIC_BPM_PER_LEVEL = 8;   // BPM increase per intensity level
+        public static final double MUSIC_VOLUME_BASE = 0.6; // Base volume factor
+        public static final double MUSIC_VOLUME_PER_LEVEL = 0.08; // Volume increase per level
+
+        // Sound effects (SFX) settings
+        public static final int SFX_SAMPLE_RATE = 44100;
+        public static final int SFX_BITS_PER_SAMPLE = 16;
+        public static final int SFX_CHANNELS = 2; // Stereo
+        public static final float SFX_MASTER_VOLUME_DEFAULT = 0.7f;
     }
 
     // === UI SETTINGS ===
