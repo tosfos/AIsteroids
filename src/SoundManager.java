@@ -96,8 +96,10 @@ public class SoundManager {
                         ambientLine.write(AMBIENT_SPACE, 0, AMBIENT_SPACE.length);
                     }
 
-                    ambientLine.drain();
-                    ambientLine.close();
+                    if (ambientLine != null) {
+                        ambientLine.drain();
+                        ambientLine.close();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
