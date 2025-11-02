@@ -533,7 +533,8 @@ public class SoundManager {
         for (int i = 0; i < input.length; i += 4) {
             // Convert to sample values
             short leftSample = (short) ((input[i + 1] << 8) | (input[i] & 0xFF));
-            short rightSample = (short) ((input[i + 3] << 8) | (input[i + 2] & 0xFF));
+            // Right channel is read but only left channel is processed for reverb
+            // (stereo data structure requires reading both channels)
 
             // Add reverb
             double drySignal = leftSample / 32767.0;

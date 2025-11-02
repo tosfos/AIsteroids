@@ -105,26 +105,9 @@ public class WaveSystem {
         LeaderboardSystem.waveCompleted(currentWave, currentStats.isPerfectWave(),
             bossWave, waveTime);
 
-        // Calculate wave completion bonus
-        int bonus = GameConfig.Scoring.WAVE_COMPLETION_BONUS * scoreMultiplier;
-
-        // Perfect wave bonus
-        if (currentStats.isPerfectWave()) {
-            bonus *= 2;
-        }
-
-        // Speed bonus
-        if (waveTime < GameConfig.Wave.SPEED_BONUS_TIME) {
-            bonus += GameConfig.Wave.SPEED_BONUS_POINTS * scoreMultiplier;
-        }
-
-        // Boss wave bonus
-        if (bossWave) {
-            bonus *= 3;
-        }
-
-        // Note: Bonus is calculated but not directly applied here
-        // Wave completion scoring is handled by the caller
+        // Wave completion bonus calculation is available via getWaveCompletionBonus()
+        // if needed by the caller. Scoring is handled by ScoreCalculator and applied
+        // in GameEngine when processing wave completion.
 
         // Update stats history
         recentStats.offer(currentStats);

@@ -25,7 +25,6 @@ public class PlayerShip extends GameObject {
     private double fireRate = GameConfig.PlayerShip.FIRE_RATE; // Base fire rate (shots per second)
     private double lastFireTime = 0;
     private boolean hasShield = false;
-    private double shieldTimer = 0;
 
     // Constants for rotation and acceleration.
     private double rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
@@ -422,7 +421,7 @@ public class PlayerShip extends GameObject {
             case SHIELD:
                 // Activate invulnerability shield
                 hasShield = true;
-                shieldTimer = type.getDuration();
+                // Shield duration is tracked in activePowerUps map
                 break;
             case SPEED_BOOST:
                 // Increase ship maneuverability and speed
@@ -467,7 +466,6 @@ public class PlayerShip extends GameObject {
                 case SHIELD:
                     // Deactivate shield protection
                     hasShield = false;
-                    shieldTimer = 0;
                     break;
                 case SPEED_BOOST:
                     // Restore normal ship maneuverability

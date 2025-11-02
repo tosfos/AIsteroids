@@ -24,7 +24,6 @@ import java.util.List;
  * @version 1.0
  */
 public class Bullet extends Projectile {
-    private double angle;
     private double speed = GameConfig.Bullet.SPEED; // pixels per second.
     private double lifespan = GameConfig.Bullet.LIFETIME; // Bullet lifetime from config
     private double timeAlive = 0;
@@ -50,7 +49,6 @@ public class Bullet extends Projectile {
      */
     public Bullet(double x, double y, double angle) {
        super(x, y);
-       this.angle = angle;
        // Compute initial velocity.
        vx = speed * Math.cos(angle);
        vy = speed * Math.sin(angle);

@@ -1,6 +1,5 @@
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -204,11 +203,9 @@ public class ParticleSystem {
 
     // Spark particle
     private static class SparkParticle extends Particle {
-        private double length;
-
         public SparkParticle(double x, double y, double vx, double vy, double life) {
             super(x, y, vx, vy, Color.YELLOW, life);
-            this.length = 3 + rand.nextDouble() * 5;
+            // Length is determined by visual trail in draw() method
         }
 
         @Override
