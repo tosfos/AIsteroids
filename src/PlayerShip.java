@@ -59,9 +59,12 @@ public class PlayerShip extends GameObject {
 
         // Accelerate in the facing direction.
         if (accelerating) {
+            // Cache cos/sin to avoid repeated calculations
+            double cosAngle = Math.cos(angle);
+            double sinAngle = Math.sin(angle);
             // Adjust velocity based on current angle
-            vx += Math.cos(angle) * acceleration * deltaTime;
-            vy += Math.sin(angle) * acceleration * deltaTime;
+            vx += cosAngle * acceleration * deltaTime;
+            vy += sinAngle * acceleration * deltaTime;
 
             // Add engine trail particles
             addEngineTrail();
@@ -183,6 +186,11 @@ public class PlayerShip extends GameObject {
 
     // Reusable color to reduce object allocation
     private static final Color TRAIL_COLOR = new Color(0, 150, 255, 150);
+    
+    // Cache commonly used values
+    private static final double PI_OVER_12 = Math.PI / 12.0; // 15 degrees for spread shot
+    private static final double PI_OVER_8 = Math.PI / 8.0;   // 22.5 degrees for multi shot
+    private static final double BULLET_OFFSET_DISTANCE = 15.0;
 
     private void updateEngineTrail(double deltaTime) {
         // Optimize by combining update and cleanup in one pass
@@ -196,10 +204,11 @@ public class PlayerShip extends GameObject {
     }
 
     private void drawEngineTrail(Graphics2D g) {
-        // Create a copy to avoid concurrent modification
-        List<TrailParticle> trailCopy = new ArrayList<>(engineTrail);
-        for (TrailParticle particle : trailCopy) {
-            particle.draw(g);
+        // Iterate directly - engineTrail is only accessed from update thread
+        for (TrailParticle particle : engineTrail) {
+            if (particle.isAlive()) {
+                particle.draw(g);
+            }
         }
     }
 
@@ -310,9 +319,12 @@ public class PlayerShip extends GameObject {
         lastFireTime = 0;
         SoundManager.playLaser();
 
-        List<Projectile> bullets = new ArrayList<>();
-        double bulletX = x + Math.cos(angle) * 15;
-        double bulletY = y + Math.sin(angle) * 15;
+        // Pre-allocate list with estimated capacity to reduce resizing
+        List<Projectile> bullets = new ArrayList<>(5);
+        double cosAngle = Math.cos(angle);
+        double sinAngle = Math.sin(angle);
+        double bulletX = x + cosAngle * BULLET_OFFSET_DISTANCE;
+        double bulletY = y + sinAngle * BULLET_OFFSET_DISTANCE;
 
         if (activePowerUps.containsKey(PowerUp.PowerUpType.LASER_BEAM)) {
             // Fire a high-powered laser beam
@@ -322,13 +334,13 @@ public class PlayerShip extends GameObject {
         } else if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
             // Fire 3 bullets in spread pattern
             for (int i = -1; i <= 1; i++) {
-                double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread
+                double spreadAngle = angle + (i * PI_OVER_12); // 15 degree spread
                 bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
             }
         } else if (activePowerUps.containsKey(PowerUp.PowerUpType.MULTI_SHOT)) {
             // Fire 5 bullets in wider spread
             for (int i = -2; i <= 2; i++) {
-                double spreadAngle = angle + (i * Math.PI / 8); // 22.5 degree spread
+                double spreadAngle = angle + (i * PI_OVER_8); // 22.5 degree spread
                 bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
             }
         } else {
@@ -342,20 +354,22 @@ public class PlayerShip extends GameObject {
 
     // Test-friendly bullet firing without rate limiting
     public List<Bullet> fireBulletForTesting() {
-        List<Bullet> bullets = new ArrayList<>();
-        double bulletX = x + Math.cos(angle) * 15;
-        double bulletY = y + Math.sin(angle) * 15;
+        List<Bullet> bullets = new ArrayList<>(5);
+        double cosAngle = Math.cos(angle);
+        double sinAngle = Math.sin(angle);
+        double bulletX = x + cosAngle * BULLET_OFFSET_DISTANCE;
+        double bulletY = y + sinAngle * BULLET_OFFSET_DISTANCE;
 
         if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
             // Fire 3 bullets in spread pattern
             for (int i = -1; i <= 1; i++) {
-                double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread
+                double spreadAngle = angle + (i * PI_OVER_12); // 15 degree spread
                 bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
             }
         } else if (activePowerUps.containsKey(PowerUp.PowerUpType.MULTI_SHOT)) {
             // Fire 5 bullets in wider spread
             for (int i = -2; i <= 2; i++) {
-                double spreadAngle = angle + (i * Math.PI / 8); // 22.5 degree spread
+                double spreadAngle = angle + (i * PI_OVER_8); // 22.5 degree spread
                 bullets.add(new Bullet(bulletX, bulletY, spreadAngle));
             }
         } else {

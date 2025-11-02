@@ -31,6 +31,16 @@ public class Bullet extends Projectile {
     private List<TrailPoint> trail;
     private int trailLength = 8;
 
+    // Cached glow colors and radii to avoid allocations
+    private static final Color[] GLOW_COLORS = {
+        new Color(255, 255, 255, 255), // Bright white core
+        new Color(100, 200, 255, 200), // Blue middle
+        new Color(50, 150, 255, 100),  // Outer blue glow
+        new Color(0, 100, 255, 50)     // Very outer glow
+    };
+
+    private static final float[] GLOW_RADII = {2f, 4f, 6f, 8f};
+
     /**
      * Creates a new bullet at the specified position and angle.
      *
@@ -52,7 +62,7 @@ public class Bullet extends Projectile {
        // Add current position to trail
        trail.add(new TrailPoint(x, y, timeAlive));
 
-       // Keep trail length manageable
+       // Keep trail length manageable (use remove(0) which is O(n), but trail is small)
        while (trail.size() > trailLength) {
            trail.remove(0);
        }
@@ -72,18 +82,6 @@ public class Bullet extends Projectile {
        drawTrail(g);
 
        // Create a more impressive bullet effect
-       int bulletSize = 12;
-
-       // Multi-layer glow effect
-       Color[] glowColors = {
-           new Color(255, 255, 255, 255), // Bright white core
-           new Color(100, 200, 255, 200), // Blue middle
-           new Color(50, 150, 255, 100),  // Outer blue glow
-           new Color(0, 100, 255, 50)     // Very outer glow
-       };
-
-       float[] glowRadii = {2f, 4f, 6f, 8f};
-
        // Save transform and current settings
        AffineTransform old = g.getTransform();
        Paint oldPaint = g.getPaint();
@@ -92,14 +90,15 @@ public class Bullet extends Projectile {
        g.translate(x, y);
 
        // Draw multiple glow layers
-       for (int i = glowColors.length - 1; i >= 0; i--) {
+       for (int i = GLOW_COLORS.length - 1; i >= 0; i--) {
            float[] dist = {0.0f, 1.0f};
-           Color[] colors = {glowColors[i], new Color(glowColors[i].getRed(), glowColors[i].getGreen(), glowColors[i].getBlue(), 0)};
-           RadialGradientPaint paint = new RadialGradientPaint(0, 0, glowRadii[i], dist, colors);
+           Color[] colors = {GLOW_COLORS[i], new Color(GLOW_COLORS[i].getRed(), GLOW_COLORS[i].getGreen(), GLOW_COLORS[i].getBlue(), 0)};
+           RadialGradientPaint paint = new RadialGradientPaint(0, 0, GLOW_RADII[i], dist, colors);
 
            g.setPaint(paint);
-           g.fillOval((int)(-glowRadii[i]), (int)(-glowRadii[i]),
-                     (int)(glowRadii[i] * 2), (int)(glowRadii[i] * 2));
+           float radius = GLOW_RADII[i];
+           g.fillOval((int)(-radius), (int)(-radius),
+                     (int)(radius * 2), (int)(radius * 2));
        }
 
        // Add sparkle effect

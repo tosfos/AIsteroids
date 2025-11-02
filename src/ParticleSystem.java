@@ -21,10 +21,11 @@ public class ParticleSystem {
     }
 
     public synchronized void draw(Graphics2D g) {
-        // Create a defensive copy to avoid concurrent modification
-        List<Particle> particlesCopy = new ArrayList<>(particles);
-        for (Particle particle : particlesCopy) {
-            particle.draw(g);
+        // Iterate directly since we're synchronized - no copy needed
+        for (Particle particle : particles) {
+            if (particle.isAlive()) {
+                particle.draw(g);
+            }
         }
     }
 

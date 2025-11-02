@@ -94,7 +94,7 @@ public class GameEngine implements Runnable {
                 try {
                     // Spawn power-ups based on wave system
                     WaveSystem.PowerUpSpawnInfo powerUpInfo = waveSystem.getPowerUpSpawnInfo();
-                    if (Math.random() < powerUpInfo.spawnChance) {
+                    if (RANDOM.nextDouble() < powerUpInfo.spawnChance) {
                         addGameObject(PowerUp.createRandomPowerUp(WIDTH, HEIGHT));
                     }
 
@@ -206,21 +206,19 @@ public class GameEngine implements Runnable {
         // Update dynamic music intensity based on game state
         updateMusicIntensity();
 
+        // Combine synchronized blocks to reduce lock contention
         synchronized(lock) {
+            // No need for copy since we're already synchronized
             updateGameObjects(deltaTime);
             processCollisions();
             removeDeadObjects();
-        }
-
-        // Screen wrapping for all game objects.
-        synchronized(lock) {
             wrapObjectsAroundScreen();
         }
     }
 
     private void updateGameObjects(double deltaTime) {
-        // Update every game object using a copy to avoid concurrent modification
-        for (GameObject obj : new ArrayList<>(gameObjects)) {
+        // Direct iteration is safe since caller holds the lock
+        for (GameObject obj : gameObjects) {
             obj.update(deltaTime);
         }
     }
@@ -527,21 +525,23 @@ public class GameEngine implements Runnable {
         }
     }
 
+    // Reusable Random instance to avoid allocations
+    private static final Random RANDOM = new Random();
+
     private Asteroid createAsteroidWithDifficulty(WaveSystem.AsteroidSpawnInfo spawnInfo) {
         // Create asteroid at screen edge
         double x, y;
-        Random rand = new Random();
 
-        if (rand.nextBoolean()) {
-            x = rand.nextBoolean() ? -50 : WIDTH + 50;
-            y = rand.nextDouble() * HEIGHT;
+        if (RANDOM.nextBoolean()) {
+            x = RANDOM.nextBoolean() ? -50 : WIDTH + 50;
+            y = RANDOM.nextDouble() * HEIGHT;
         } else {
-            x = rand.nextDouble() * WIDTH;
-            y = rand.nextBoolean() ? -50 : HEIGHT + 50;
+            x = RANDOM.nextDouble() * WIDTH;
+            y = RANDOM.nextBoolean() ? -50 : HEIGHT + 50;
         }
 
         // Calculate velocity towards screen center with some randomness
-        double angle = Math.atan2(HEIGHT/2 - y, WIDTH/2 - x) + (rand.nextDouble() - 0.5) * Math.PI / 2;
+        double angle = Math.atan2(HEIGHT/2 - y, WIDTH/2 - x) + (RANDOM.nextDouble() - 0.5) * Math.PI / 2;
         double vx = spawnInfo.speed * Math.cos(angle);
         double vy = spawnInfo.speed * Math.sin(angle);
 

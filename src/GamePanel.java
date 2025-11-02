@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Collections;
 
 public class GamePanel extends JPanel implements KeyListener {
     private GameEngine engine;
@@ -560,21 +559,23 @@ public class GamePanel extends JPanel implements KeyListener {
         Set<LeaderboardSystem.Achievement> unlocked = LeaderboardSystem.getUnlockedAchievements();
         if (unlocked.isEmpty()) return;
 
-        List<LeaderboardSystem.Achievement> recentAchievements = new ArrayList<>(unlocked);
-        Collections.reverse(recentAchievements); // Show most recent first
+        // Convert to array for reverse iteration (more efficient than reversing list)
+        LeaderboardSystem.Achievement[] achievements = unlocked.toArray(new LeaderboardSystem.Achievement[0]);
+        int count = achievements.length;
 
         g.setFont(new Font("Arial", Font.BOLD, 12));
         g.setColor(new Color(255, 215, 0, 180)); // Gold color
 
         int startY = getHeight() / 2 + 50;
-        int count = 0;
-        for (LeaderboardSystem.Achievement achievement : recentAchievements) {
-            if (count >= 3) break; // Show only last 3
+        int displayCount = 0;
+        // Iterate backwards to show most recent first
+        for (int i = count - 1; i >= 0 && displayCount < 3; i--) {
+            LeaderboardSystem.Achievement achievement = achievements[i];
             String text = "★ " + achievement.getName();
             FontMetrics fm = g.getFontMetrics();
             int x = (getWidth() - fm.stringWidth(text)) / 2;
-            g.drawString(text, x, startY + count * 15);
-            count++;
+            g.drawString(text, x, startY + displayCount * 15);
+            displayCount++;
         }
     }
 
