@@ -31,7 +31,7 @@ public class PerformanceMonitor {
 
     /**
      * Records a frame completion and updates performance metrics.
-     * 
+     *
      * <p>This method should be called once per frame to track frame timing,
      * calculate FPS, and monitor performance. It's thread-safe and designed
      * for high-frequency calls (60+ times per second).</p>
@@ -66,7 +66,7 @@ public class PerformanceMonitor {
                     averageFPS = 1e9 / avgFrameTime; // Convert ns to FPS
 
                     // Check for frame time outliers
-                    if (outlierCallback != null && 
+                    if (outlierCallback != null &&
                         frameTime > avgFrameTime * GameConfig.Performance.FRAME_TIME_OUTLIER_THRESHOLD) {
                         outlierCallback.onFrameTimeOutlier(
                             frameTime / 1_000_000.0,  // Convert to ms
@@ -85,7 +85,7 @@ public class PerformanceMonitor {
 
     /**
      * Gets a snapshot of current performance statistics.
-     * 
+     *
      * <p>The returned statistics include:
      * <ul>
      *   <li>Average FPS (frames per second)</li>
@@ -93,7 +93,7 @@ public class PerformanceMonitor {
      *   <li>Memory allocation rate (MB/s)</li>
      * </ul>
      * </p>
-     * 
+     *
      * @return Immutable snapshot of current performance metrics
      */
     public static PerfStats getStats() {
@@ -111,9 +111,9 @@ public class PerformanceMonitor {
 
     /**
      * Gets current memory usage in megabytes.
-     * 
+     *
      * <p>Calculates used memory as: (totalMemory - freeMemory) / 1024^2</p>
-     * 
+     *
      * @return Current memory usage in MB
      */
     public static double getCurrentMemoryMB() {
@@ -146,14 +146,14 @@ public class PerformanceMonitor {
 
     /**
      * Checks memory pressure and triggers garbage collection if necessary.
-     * 
+     *
      * <p>If memory usage exceeds the configured threshold, this method will:
      * <ul>
      *   <li>Request garbage collection via System.gc()</li>
      *   <li>Pause briefly to allow GC to complete</li>
      * </ul>
      * </p>
-     * 
+     *
      * <p>This method should be called periodically (e.g., every frame or every few seconds)
      * to prevent memory pressure issues during long gameplay sessions.</p>
      */
@@ -178,11 +178,11 @@ public class PerformanceMonitor {
 
     /**
      * Sets a callback to be notified when frame times exceed normal thresholds.
-     * 
+     *
      * <p>Frame time outliers indicate performance issues or frame drops.
      * The callback receives both the outlier frame time and the average frame time
      * for comparison.</p>
-     * 
+     *
      * @param callback Callback to invoke when frame time outliers are detected,
      *                 or null to disable outlier detection
      */
@@ -192,7 +192,7 @@ public class PerformanceMonitor {
 
     /**
      * Immutable snapshot of performance statistics.
-     * 
+     *
      * <p>This class provides a read-only view of performance metrics at a specific
      * point in time. All values are captured atomically to ensure consistency.</p>
      */

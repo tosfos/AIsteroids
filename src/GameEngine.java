@@ -28,6 +28,9 @@ public class GameEngine implements Runnable {
     // Wave system for progressive difficulty
     private WaveSystem waveSystem;
 
+    // Collision handler for managing object collisions
+    private CollisionHandler collisionHandler;
+
     private volatile int score = 0;
     private volatile boolean gameOver = false;
 
@@ -47,6 +50,9 @@ public class GameEngine implements Runnable {
 
             // Initialize wave system
             waveSystem = new WaveSystem();
+
+            // Initialize collision handler
+            collisionHandler = new CollisionHandler(this);
 
             // Track game start
             LeaderboardSystem.gameStarted();
@@ -241,7 +247,7 @@ public class GameEngine implements Runnable {
                 double maxDistance = a.getRadius() + b.getRadius();
 
                 if (distance <= maxDistance * maxDistance) {
-                    handleCollision(a, b);
+                    collisionHandler.handleCollision(a, b);
                 }
             }
         }
@@ -259,116 +265,25 @@ public class GameEngine implements Runnable {
         }
     }
 
-    private void handleCollision(GameObject a, GameObject b) {
-        // Determine collision type and handle appropriately
-        if (isBulletAsteroidCollision(a, b)) {
-            handleBulletAsteroidCollision(a, b);
-        } else if (isPlayerAsteroidCollision(a, b)) {
-            handlePlayerAsteroidCollision(a, b);
-        } else if (isPlayerPowerUpCollision(a, b)) {
-            handlePlayerPowerUpCollision(a, b);
-        }
-    }
-
-    private boolean isBulletAsteroidCollision(GameObject a, GameObject b) {
-        boolean aIsProjectile = (a instanceof Bullet || a instanceof LaserBeam);
-        boolean bIsProjectile = (b instanceof Bullet || b instanceof LaserBeam);
-        return (aIsProjectile && b instanceof Asteroid) ||
-               (bIsProjectile && a instanceof Asteroid);
-    }
-
-    private boolean isPlayerAsteroidCollision(GameObject a, GameObject b) {
-        return (a instanceof PlayerShip && b instanceof Asteroid) ||
-               (b instanceof PlayerShip && a instanceof Asteroid);
-    }
-
-    private boolean isPlayerPowerUpCollision(GameObject a, GameObject b) {
-        return (a instanceof PlayerShip && b instanceof PowerUp) ||
-               (b instanceof PlayerShip && a instanceof PowerUp);
-    }
-
-    private void handleBulletAsteroidCollision(GameObject a, GameObject b) {
-        // Check if it's a laser beam or regular bullet
-        boolean isLaserBeam = (a instanceof LaserBeam || b instanceof LaserBeam);
-        Asteroid asteroid = (a instanceof Asteroid) ? (Asteroid) a : (Asteroid) b;
-
-        if (isLaserBeam) {
-            handleLaserBeamAsteroidCollision(a, b, asteroid);
-        } else {
-            handleBulletAsteroidCollisionInternal(a, b, asteroid);
-        }
-    }
-
-    private void handleLaserBeamAsteroidCollision(GameObject a, GameObject b, Asteroid asteroid) {
-        LaserBeam beam = (a instanceof LaserBeam) ? (LaserBeam) a : (LaserBeam) b;
-        // High-powered beam reduces asteroid size by multiple levels
-        for (int i = 0; i < beam.getDamage(); i++) {
-            if (asteroid.isAlive()) { // Keep damaging until destroyed
-                asteroid.hit(this);
-            }
-        }
-        // Create larger impact effect with multiple spark directions
-        double impactAngle = Math.atan2(asteroid.getY() - beam.getY(),
-                                      asteroid.getX() - beam.getX());
-        createMultiDirectionImpactSparks(asteroid.getX(), asteroid.getY(), impactAngle);
-        // Play higher pitched hit sound
-        InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
-            "Failed to play asteroid hit sound");
-    }
-
-    private void handleBulletAsteroidCollisionInternal(GameObject a, GameObject b, Asteroid asteroid) {
-        Bullet bullet = (a instanceof Bullet) ? (Bullet) a : (Bullet) b;
-        bullet.setAlive(false);
-
-        // Create normal impact sparks
-        double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
-                                      asteroid.getX() - bullet.getX());
-        createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
-
-        asteroid.hit(this); // Asteroid may split or get destroyed
-        InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
-            "Failed to play asteroid hit sound");
-    }
-
-    private void createMultiDirectionImpactSparks(double x, double y, double baseAngle) {
-        createImpactSparks(x, y, baseAngle);
-        createImpactSparks(x, y, baseAngle + GameConfig.Angles.PI_OVER_2);
-        createImpactSparks(x, y, baseAngle - GameConfig.Angles.PI_OVER_2);
-    }
-
-    private void handlePlayerAsteroidCollision(GameObject a, GameObject b) {
-        PlayerShip ship = (a instanceof PlayerShip) ? (PlayerShip) a : (PlayerShip) b;
-
-        if (!ship.hasShield()) {
-            double oldX = ship.getX();
-            double oldY = ship.getY();
-            ship.damage();
-
-            // Notify wave system of damage
+    /**
+     * Notifies the wave system that the player has taken damage.
+     * Used by CollisionHandler when player-asteroid collision occurs.
+     */
+    void notifyPlayerDamaged() {
+        if (waveSystem != null) {
             waveSystem.playerDamaged();
-
-            if (ship.isAlive()) {
-                // Create warp effect at old position
-                createWarpEffect(oldX, oldY);
-                // Create warp effect at new position
-                createWarpEffect(ship.getX(), ship.getY());
-            }
-        } else {
-            // Shield blocked the hit
-            LeaderboardSystem.shieldBlocked();
         }
     }
 
-    private void handlePlayerPowerUpCollision(GameObject a, GameObject b) {
-        PlayerShip ship = (a instanceof PlayerShip) ? (PlayerShip) a : (PlayerShip) b;
-        PowerUp powerUp = (a instanceof PowerUp) ? (PowerUp) a : (PowerUp) b;
-
-        ship.addPowerUp(powerUp.getType());
-        powerUp.setAlive(false);
-
-        // Show power-up message
+    /**
+     * Shows a power-up message on the game panel.
+     * Used by CollisionHandler when player collects a power-up.
+     *
+     * @param type The type of power-up collected
+     */
+    void showPowerUpMessage(PowerUp.PowerUpType type) {
         if (gamePanel != null) {
-            gamePanel.showPowerUpMessage(powerUp.getType());
+            gamePanel.showPowerUpMessage(type);
         }
     }
 
