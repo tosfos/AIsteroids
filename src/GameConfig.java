@@ -28,6 +28,7 @@ public final class GameConfig {
         public static final double ENGINE_TRAIL_PARTICLES = 3.0;
         public static final double ENGINE_TRAIL_SPREAD = 6.0;
         public static final double ENGINE_TRAIL_LIFETIME = 0.5; // seconds
+        public static final int MAX_ENGINE_TRAIL_SIZE = 50; // Maximum trail particles to prevent memory leaks
     }
 
     // === BULLET SETTINGS ===
@@ -37,6 +38,7 @@ public final class GameConfig {
         public static final double RADIUS = 3.0; // collision radius
         public static final int MULTI_SHOT_COUNT = 3; // bullets per multi-shot
         public static final double MULTI_SHOT_SPREAD = Math.toRadians(15.0); // angle spread
+        public static final int MAX_TRAIL_LENGTH = 8; // Maximum trail points per bullet
     }
 
     // === ASTEROID SETTINGS ===
@@ -160,6 +162,7 @@ public final class GameConfig {
         public static final double PARTICLE_SPEED_MAX = 200.0;
         public static final double PARTICLE_LIFETIME_MIN = 1.0;
         public static final double PARTICLE_LIFETIME_MAX = 3.0;
+        public static final int MAX_TOTAL_PARTICLES = 1000; // Maximum total particles to prevent memory leaks
 
         // Specific particle type settings
         public static final class Explosion {

@@ -13,7 +13,15 @@ public class ParticleSystem {
     }
 
     public synchronized void update(double deltaTime) {
+        // Remove dead particles first
         particles.removeIf(particle -> !particle.isAlive());
+        
+        // Enforce maximum particle count to prevent memory leaks
+        // Remove oldest particles if we exceed the limit
+        while (particles.size() > GameConfig.Effects.MAX_TOTAL_PARTICLES) {
+            particles.remove(0);
+        }
+        
         for (Particle particle : particles) {
             particle.update(deltaTime);
         }

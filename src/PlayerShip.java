@@ -200,6 +200,11 @@ public class PlayerShip extends GameObject {
             particle.update(deltaTime);
             return false; // Keep alive particle
         });
+        
+        // Enforce maximum trail size to prevent memory leaks
+        while (engineTrail.size() > GameConfig.PlayerShip.MAX_ENGINE_TRAIL_SIZE) {
+            engineTrail.remove(0); // Remove oldest particles
+        }
     }
 
     private void drawEngineTrail(Graphics2D g) {

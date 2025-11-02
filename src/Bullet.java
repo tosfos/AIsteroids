@@ -28,7 +28,7 @@ public class Bullet extends Projectile {
     private double lifespan = GameConfig.Bullet.LIFETIME; // Bullet lifetime from config
     private double timeAlive = 0;
     private List<TrailPoint> trail;
-    private int trailLength = 8;
+    private static final int TRAIL_LENGTH = GameConfig.Bullet.MAX_TRAIL_LENGTH;
 
     // Cached glow colors and radii to avoid allocations
     private static final Color[] GLOW_COLORS = {
@@ -60,8 +60,9 @@ public class Bullet extends Projectile {
        // Add current position to trail
        trail.add(new TrailPoint(x, y, timeAlive));
 
-       // Keep trail length manageable (use remove(0) which is O(n), but trail is small)
-       while (trail.size() > trailLength) {
+       // Keep trail length manageable with size limit to prevent memory leaks
+       // Use remove(0) which is O(n), but trail is small (max 8 points)
+       while (trail.size() > TRAIL_LENGTH) {
            trail.remove(0);
        }
 
