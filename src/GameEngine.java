@@ -161,7 +161,7 @@ public class GameEngine implements Runnable {
                 lastTime = now;
 
                 update(deltaTime);
-                if (!player.isAlive() && !gameOver) {
+                if (player != null && !player.isAlive() && !gameOver) {
                     gameOver = true;
                     try {
                         SoundManager.playGameOver(); // Play game over sound
@@ -414,11 +414,15 @@ public class GameEngine implements Runnable {
             score = 0;
 
             // Reset existing player ship
-            player.reset();
-            addGameObject(player);
+            if (player != null) {
+                player.reset();
+                addGameObject(player);
+            }
 
             // Reset wave system
-            waveSystem.reset();
+            if (waveSystem != null) {
+                waveSystem.reset();
+            }
 
             // Spawn initial wave asteroids
             spawnWaveAsteroids();
@@ -474,7 +478,7 @@ public class GameEngine implements Runnable {
 
         synchronized(lock) {
             snapshot = new ArrayList<>(gameObjects);
-            hasPowerUp = !player.getActivePowerUps().isEmpty();
+            hasPowerUp = (player != null && !player.getActivePowerUps().isEmpty());
         }
 
         // Count asteroids outside the synchronized block
@@ -485,7 +489,8 @@ public class GameEngine implements Runnable {
             }
         }
 
-        MusicSystem.updateMusicIntensity(asteroidCount, player.getLives(), hasPowerUp);
+        int playerLives = (player != null) ? player.getLives() : 0;
+        MusicSystem.updateMusicIntensity(asteroidCount, playerLives, hasPowerUp);
     }
 
     private void spawnWaveAsteroids() {
