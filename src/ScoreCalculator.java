@@ -1,10 +1,10 @@
 /**
  * Calculates scores for various game events and actions.
- * 
+ *
  * <p>This class provides static methods for computing scores based on game
  * events like asteroid destruction, wave completion, and power-up collection.
  * It handles multipliers, bonuses, and scoring rules.</p>
- * 
+ *
  * <p>Scoring factors:
  * <ul>
  *   <li>Asteroid size (small/medium/large)</li>
@@ -14,7 +14,7 @@
  *   <li>Boss wave multipliers</li>
  * </ul>
  * </p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */

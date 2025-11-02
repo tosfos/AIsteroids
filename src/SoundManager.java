@@ -100,7 +100,12 @@ public class SoundManager {
                         ambientLine.drain();
                         ambientLine.close();
                     }
+                } catch (LineUnavailableException e) {
+                    System.err.println("Audio line unavailable for ambient sound: " + e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid audio format for ambient sound: " + e.getMessage());
                 } catch (Exception e) {
+                    System.err.println("Unexpected error in ambient sound: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                     e.printStackTrace();
                 }
             });
@@ -147,7 +152,12 @@ public class SoundManager {
                 line.write(adjustedData, 0, adjustedData.length);
                 line.drain();
                 line.close();
+            } catch (LineUnavailableException e) {
+                System.err.println("Audio line unavailable for sound effect: " + e.getMessage());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid audio format for sound effect: " + e.getMessage());
             } catch (Exception e) {
+                System.err.println("Unexpected error playing sound: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 e.printStackTrace();
             }
         });

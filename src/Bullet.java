@@ -5,11 +5,11 @@ import java.util.List;
 
 /**
  * Represents a projectile bullet fired from the player ship.
- * 
+ *
  * <p>Bullets have a limited lifetime and move at a constant speed in a
  * straight line. They include visual effects like glowing trails and
  * sparkle animations for enhanced visual appeal.</p>
- * 
+ *
  * <p>Key features:
  * <ul>
  *   <li>Constant speed movement in specified direction</li>
@@ -19,7 +19,7 @@ import java.util.List;
  *   <li>Sparkle animation effects</li>
  * </ul>
  * </p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */
@@ -33,7 +33,7 @@ public class Bullet extends Projectile {
 
     /**
      * Creates a new bullet at the specified position and angle.
-     * 
+     *
      * @param x Starting X coordinate
      * @param y Starting Y coordinate
      * @param angle Direction of travel in radians (0 = right, PI/2 = down)

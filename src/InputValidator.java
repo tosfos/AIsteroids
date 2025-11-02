@@ -1,10 +1,10 @@
 /**
  * Utility class for input validation and error handling.
- * 
+ *
  * <p>Provides defensive programming tools to validate inputs and prevent crashes.
  * All methods throw {@link IllegalArgumentException} with descriptive messages
  * when validation fails.</p>
- * 
+ *
  * <p>This class contains:
  * <ul>
  *   <li>Range validation for numbers</li>
@@ -14,9 +14,9 @@
  *   <li>Domain-specific validators (delta time, asteroid size)</li>
  * </ul>
  * </p>
- * 
+ *
  * <p>All methods are static and the class cannot be instantiated.</p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */

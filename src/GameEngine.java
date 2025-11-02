@@ -60,8 +60,13 @@ public class GameEngine implements Runnable {
 
            // Start controlled wave manager thread
            startWaveManager();
+       } catch (RuntimeException e) {
+           // Re-throw runtime exceptions as-is
+           cleanup();
+           throw e;
        } catch (Exception e) {
-           System.err.println("Error initializing GameEngine: " + e.getMessage());
+           System.err.println("Error initializing GameEngine: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+           e.printStackTrace();
            cleanup();
            throw new RuntimeException("Failed to initialize game", e);
        }
@@ -95,8 +100,13 @@ public class GameEngine implements Runnable {
 
                     // Check if we need to spawn more asteroids for current wave
                     checkAndSpawnAsteroids();
+                } catch (RuntimeException e) {
+                    System.err.println("Error in wave manager (runtime): " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    e.printStackTrace();
+                    // Don't break loop for runtime exceptions, but log them
                 } catch (Exception e) {
-                    System.err.println("Error in wave manager: " + e.getMessage());
+                    System.err.println("Error in wave manager (unexpected): " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         });
@@ -135,8 +145,9 @@ public class GameEngine implements Runnable {
         try {
             SoundManager.stopAmbientSpace();
             MusicSystem.stopMusic();
-        } catch (Exception e) {
-            System.err.println("Error stopping audio systems: " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.err.println("Error stopping audio systems: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            // Non-critical, continue cleanup
         }
     }
 
@@ -160,8 +171,9 @@ public class GameEngine implements Runnable {
                         // Record final stats and add to leaderboard
                         LeaderboardSystem.gameEnded(score, waveSystem.getCurrentWave());
                         LeaderboardSystem.addScore(LeaderboardSystem.getPlayerName(), score, waveSystem.getCurrentWave());
-                    } catch (Exception e) {
-                        System.err.println("Error handling game over: " + e.getMessage());
+                    } catch (RuntimeException e) {
+                        System.err.println("Error handling game over: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                        // Non-critical, game over state is still set
                     }
                 }
 
@@ -176,8 +188,9 @@ public class GameEngine implements Runnable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
-            } catch (Exception e) {
-                System.err.println("Error in game loop: " + e.getMessage());
+            } catch (RuntimeException e) {
+                System.err.println("Error in game loop: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                e.printStackTrace();
                 // Continue running unless it's a critical error
             }
         }
@@ -472,9 +485,13 @@ public class GameEngine implements Runnable {
                     Asteroid asteroid = createAsteroidWithDifficulty(spawnInfo);
                     addGameObject(asteroid);
                 }
-            } catch (Exception e) {
-                System.err.println("Error spawning asteroids: " + e.getMessage());
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                System.err.println("Error spawning asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 throw e; // Propagate to allow caller to handle wave system sync
+            } catch (Exception e) {
+                System.err.println("Unexpected error spawning asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("Failed to spawn asteroids", e);
             }
         }
     }
@@ -494,8 +511,13 @@ public class GameEngine implements Runnable {
                 waveSystem.asteroidDestroyed(); // This will trigger wave completion
                 try {
                     spawnWaveAsteroids(); // Spawn next wave
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    System.err.println("Error spawning wave asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    // Ensure wave system stays in sync even if spawn fails
+                    waveSystem.reset();
                 } catch (Exception e) {
-                    System.err.println("Error spawning wave asteroids: " + e.getMessage());
+                    System.err.println("Unexpected error spawning wave asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    e.printStackTrace();
                     // Ensure wave system stays in sync even if spawn fails
                     waveSystem.reset();
                 }

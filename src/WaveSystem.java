@@ -7,7 +7,7 @@ import java.util.Collections;
 
 /**
  * Manages wave progression, adaptive difficulty, and wave-based statistics.
- * 
+ *
  * <p>The wave system controls:
  * <ul>
  *   <li>Wave progression and numbering</li>
@@ -19,10 +19,10 @@ import java.util.Collections;
  *   <li>Wave completion bonuses and rewards</li>
  * </ul>
  * </p>
- * 
+ *
  * <p>The system uses a logistic curve for difficulty scaling and tracks
  * recent wave performance to adjust difficulty dynamically.</p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */
@@ -56,8 +56,8 @@ public class WaveSystem {
 
         // Calculate base difficulty using a smoothed logistic curve
         double x = (waveNumber - 1) * GameConfig.Wave.DIFFICULTY_SMOOTHING_FACTOR;
-        double baseDifficulty = GameConfig.Wave.BASE_DIFFICULTY + 
-            (GameConfig.Wave.MAX_DIFFICULTY - GameConfig.Wave.BASE_DIFFICULTY) * 
+        double baseDifficulty = GameConfig.Wave.BASE_DIFFICULTY +
+            (GameConfig.Wave.MAX_DIFFICULTY - GameConfig.Wave.BASE_DIFFICULTY) *
             (1.0 / (1.0 + Math.exp(-x)));
 
         // Apply performance-based adjustment and clamp final difficulty within allowed range
@@ -67,7 +67,7 @@ public class WaveSystem {
             Math.min(GameConfig.Wave.MAX_DIFFICULTY, adjusted));
 
         // Calculate score multiplier (capped but not affected by performance)
-        scoreMultiplier = Math.min(GameConfig.Wave.SCORE_MULTIPLIER_MAX, 
+        scoreMultiplier = Math.min(GameConfig.Wave.SCORE_MULTIPLIER_MAX,
             1 + (waveNumber - 1) / 3);
 
         // Calculate asteroids for this wave
@@ -102,7 +102,7 @@ public class WaveSystem {
 
         // Record final stats
         long waveTime = currentStats.getWaveTime();
-        LeaderboardSystem.waveCompleted(currentWave, currentStats.isPerfectWave(), 
+        LeaderboardSystem.waveCompleted(currentWave, currentStats.isPerfectWave(),
             bossWave, waveTime);
 
         // Calculate wave completion bonus

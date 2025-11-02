@@ -214,7 +214,14 @@ public class LeaderboardSystem {
             @SuppressWarnings("unchecked")
             List<LeaderboardEntry> loadedLeaderboard = (List<LeaderboardEntry>) ois.readObject();
             leaderboard = loadedLeaderboard;
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            // File doesn't exist yet, start with empty leaderboard
+            leaderboard = new ArrayList<>();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading leaderboard: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            leaderboard = new ArrayList<>();
+        } catch (ClassCastException e) {
+            System.err.println("Invalid leaderboard data format: " + e.getMessage());
             leaderboard = new ArrayList<>();
         }
     }
@@ -222,8 +229,9 @@ public class LeaderboardSystem {
     private static void saveLeaderboard() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(LEADERBOARD_FILE))) {
             oos.writeObject(leaderboard);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error saving leaderboard: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            // Non-critical, leaderboard just won't persist
         }
     }
 
@@ -239,11 +247,20 @@ public class LeaderboardSystem {
                     Achievement.valueOf(name);
                     unlockedAchievements.add(name);
                 } catch (IllegalArgumentException e) {
-                    System.err.println("Ignored invalid achievement: " + name);
+                    System.err.println("Ignored invalid achievement in storage: " + name);
                 }
             }
-            gameStats = loadedStats;
-        } catch (Exception e) {
+            gameStats = loadedStats != null ? loadedStats : new HashMap<>();
+        } catch (FileNotFoundException e) {
+            // File doesn't exist yet, start with empty data
+            unlockedAchievements = new HashSet<>();
+            gameStats = new HashMap<>();
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error loading achievements: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            unlockedAchievements = new HashSet<>();
+            gameStats = new HashMap<>();
+        } catch (ClassCastException e) {
+            System.err.println("Invalid achievements data format: " + e.getMessage());
             unlockedAchievements = new HashSet<>();
             gameStats = new HashMap<>();
         }
@@ -253,8 +270,9 @@ public class LeaderboardSystem {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ACHIEVEMENTS_FILE))) {
             oos.writeObject(unlockedAchievements);
             oos.writeObject(gameStats);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error saving achievements: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            // Non-critical, achievements just won't persist
         }
     }
 

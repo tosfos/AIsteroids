@@ -36,8 +36,16 @@ public class MusicSystem {
             sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
             updateTempoAndVolume();
             sequencer.start();
+        } catch (MidiUnavailableException e) {
+            System.err.println("MIDI unavailable when starting music: " + e.getMessage());
+            musicPlaying.set(false);
+            midiAvailable = false;
+        } catch (InvalidMidiDataException e) {
+            System.err.println("Invalid MIDI data: " + e.getMessage());
+            musicPlaying.set(false);
         } catch (Exception e) {
-            System.err.println("Error starting music: " + e.getMessage());
+            System.err.println("Unexpected error starting music: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
             musicPlaying.set(false);
         }
     }

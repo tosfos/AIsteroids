@@ -5,11 +5,11 @@ import java.util.Random;
 
 /**
  * Represents an asteroid obstacle in the game.
- * 
+ *
  * <p>Asteroids come in three sizes (large, medium, small) and split into
  * smaller asteroids when destroyed. Each asteroid has a randomly generated
  * irregular shape and unique coloring for visual variety.</p>
- * 
+ *
  * <p>Key features:
  * <ul>
  *   <li>Three size levels (3 = large, 2 = medium, 1 = small)</li>
@@ -20,7 +20,7 @@ import java.util.Random;
  *   <li>Radial gradient lighting effects</li>
  * </ul>
  * </p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */
@@ -37,7 +37,7 @@ public class Asteroid extends GameObject {
 
     /**
      * Creates a new asteroid at the specified position.
-     * 
+     *
      * @param x Initial X coordinate
      * @param y Initial Y coordinate
      * @param size Asteroid size (1 = small, 2 = medium, 3 = large)

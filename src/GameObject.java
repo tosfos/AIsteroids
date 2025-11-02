@@ -3,11 +3,11 @@ import java.awt.*;
 /**
  * Abstract base class for all game entities in the AIsteroids game.
  * Provides common functionality for position, velocity, rotation, and collision detection.
- * 
+ *
  * <p>All game objects (player ship, asteroids, bullets, power-ups, etc.) extend this class.
  * This class handles common behaviors like position updates, screen wrapping, and collision
  * detection through a pluggable collision detector interface.</p>
- * 
+ *
  * <p>Key features:
  * <ul>
  *   <li>Position and velocity management</li>
@@ -17,10 +17,10 @@ import java.awt.*;
  *   <li>Rotation support for visual orientation</li>
  * </ul>
  * </p>
- * 
+ *
  * <p>Thread safety: This class is not thread-safe. All game object operations
  * should be performed on the game update thread.</p>
- * 
+ *
  * @author AIsteroids Development Team
  * @version 1.0
  */
@@ -34,7 +34,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Creates a new game object at the specified position.
      * Uses the default collision detector implementation.
-     * 
+     *
      * @param x Initial X coordinate (must be finite)
      * @param y Initial Y coordinate (must be finite)
      * @throws IllegalArgumentException if x or y is NaN or infinite
@@ -55,7 +55,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Creates a new game object with a custom collision detector.
      * This constructor is primarily for testing and dependency injection.
-     * 
+     *
      * @param x Initial X coordinate (must be finite)
      * @param y Initial Y coordinate (must be finite)
      * @param collisionDetector Custom collision detector implementation
@@ -77,23 +77,23 @@ public abstract class GameObject implements GameEntity {
     /**
      * Updates the game object's state based on elapsed time.
      * Subclasses must implement this to update position, animation, timers, etc.
-     * 
+     *
      * @param deltaTime Time elapsed since last update in seconds
      */
     public abstract void update(double deltaTime);
-    
+
     /**
      * Renders the game object to the screen.
      * Subclasses must implement this to draw their visual representation.
-     * 
+     *
      * @param g Graphics context for drawing
      */
     public abstract void draw(Graphics2D g);
-    
+
     /**
      * Returns the bounding rectangle for collision detection.
      * Used for broad-phase collision detection before precise checks.
-     * 
+     *
      * @return Bounding rectangle in screen coordinates
      */
     public abstract Rectangle getBounds();
@@ -101,7 +101,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Checks if this game object is currently alive/active.
      * Dead objects are typically removed from the game.
-     * 
+     *
      * @return true if the object is alive, false otherwise
      */
     public boolean isAlive() {
@@ -111,7 +111,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Sets whether this game object is alive/active.
      * Setting to false will mark the object for removal.
-     * 
+     *
      * @param active New alive state
      */
     public void setAlive(boolean active) {
@@ -123,7 +123,7 @@ public abstract class GameObject implements GameEntity {
      * @return Current X coordinate
      */
     public double getX() { return x; }
-    
+
     /**
      * Gets the Y coordinate of this game object.
      * @return Current Y coordinate
@@ -135,7 +135,7 @@ public abstract class GameObject implements GameEntity {
      * @param x New X coordinate
      */
     public void setX(double x) { this.x = x; }
-    
+
     /**
      * Sets the Y coordinate of this game object.
      * @param y New Y coordinate
@@ -145,7 +145,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Gets the collision radius of this game object.
      * Used for circular collision detection.
-     * 
+     *
      * @return Collision radius in pixels
      */
     public abstract double getRadius();
@@ -153,7 +153,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Updates the object's position and rotation based on velocity and delta time.
      * Also handles screen wrapping. This method is separated for testability.
-     * 
+     *
      * @param deltaTime Time elapsed since last update in seconds
      * @throws IllegalArgumentException if deltaTime is invalid
      */
@@ -179,7 +179,7 @@ public abstract class GameObject implements GameEntity {
     /**
      * Checks if this object collides with another game object.
      * Uses the configured collision detector for the check.
-     * 
+     *
      * @param other The other game object to check collision with
      * @return true if the objects are colliding, false otherwise
      * @throws IllegalArgumentException if other is null
