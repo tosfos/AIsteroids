@@ -236,16 +236,16 @@ public class GameEngine implements Runnable {
                 GameObject b = gameObjects.get(j);
                 if (!b.isAlive()) continue; // Early exit for dead objects
 
-               // Quick distance check before expensive bounds intersection
-            double dx = a.getX() - b.getX();
-            double dy = a.getY() - b.getY();
-            double distance = dx * dx + dy * dy; // Avoid sqrt for performance
-            double maxDistance = a.getRadius() + b.getRadius();
+                // Quick distance check before expensive bounds intersection
+                double dx = a.getX() - b.getX();
+                double dy = a.getY() - b.getY();
+                double distance = dx * dx + dy * dy; // Avoid sqrt for performance
+                double maxDistance = a.getRadius() + b.getRadius();
 
-            if (distance <= maxDistance * maxDistance) {
-                handleCollision(a, b);
+                if (distance <= maxDistance * maxDistance) {
+                    handleCollision(a, b);
+                }
             }
-           }
         }
     }
 
@@ -370,7 +370,7 @@ public class GameEngine implements Runnable {
 
     /**
      * Provides a thread-safe snapshot of the game objects for rendering.
-     * 
+     *
      * @return A defensive copy of the current game objects list
      */
     public List<GameObject> getGameObjects() {
