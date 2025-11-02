@@ -36,40 +36,40 @@ public class GameEngine implements Runnable {
     private final AtomicBoolean waveManagerRunning = new AtomicBoolean(false);
 
     public GameEngine() {
-       gameObjects = new ArrayList<>();
+        gameObjects = new ArrayList<>();
 
-       try {
-           // Start ambient space sound
-           SoundManager.startAmbientSpace();
+        try {
+            // Start ambient space sound
+            SoundManager.startAmbientSpace();
 
-           // Start dynamic music
-           MusicSystem.startMusic();
+            // Start dynamic music
+            MusicSystem.startMusic();
 
-           // Initialize wave system
-           waveSystem = new WaveSystem();
+            // Initialize wave system
+            waveSystem = new WaveSystem();
 
-           // Track game start
-           LeaderboardSystem.gameStarted();
+            // Track game start
+            LeaderboardSystem.gameStarted();
 
-           // Create player ship at center.
-           player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
-           addGameObject(player);
+            // Create player ship at center
+            player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
+            addGameObject(player);
 
-           // Spawn initial wave of asteroids based on wave system
-           spawnWaveAsteroids();
+            // Spawn initial wave of asteroids based on wave system
+            spawnWaveAsteroids();
 
-           // Start controlled wave manager thread
-           startWaveManager();
-       } catch (RuntimeException e) {
-           // Re-throw runtime exceptions as-is
-           cleanup();
-           throw e;
-       } catch (Exception e) {
-           System.err.println("Error initializing GameEngine: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-           e.printStackTrace();
-           cleanup();
-           throw new RuntimeException("Failed to initialize game", e);
-       }
+            // Start controlled wave manager thread
+            startWaveManager();
+        } catch (RuntimeException e) {
+            // Re-throw runtime exceptions as-is
+            cleanup();
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Error initializing GameEngine: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            cleanup();
+            throw new RuntimeException("Failed to initialize game", e);
+        }
     }
 
     private void startWaveManager() {
@@ -113,15 +113,15 @@ public class GameEngine implements Runnable {
     }
 
     public void start() {
-       if (running.compareAndSet(false, true)) {
-           gameThread = new Thread(this, "GameEngineThread");
-           gameThread.start();
-       }
+        if (running.compareAndSet(false, true)) {
+            gameThread = new Thread(this, "GameEngineThread");
+            gameThread.start();
+        }
     }
 
     public void stop() {
-       running.set(false);
-       cleanup();
+        running.set(false);
+        cleanup();
     }
 
     private void cleanup() {
@@ -229,22 +229,22 @@ public class GameEngine implements Runnable {
         // Optimized collision detection with early exits
         int size = gameObjects.size();
         for (int i = 0; i < size; i++) {
-           GameObject a = gameObjects.get(i);
-           if (!a.isAlive()) continue; // Early exit for dead objects
+            GameObject a = gameObjects.get(i);
+            if (!a.isAlive()) continue; // Early exit for dead objects
 
-           for (int j = i + 1; j < size; j++) {
-               GameObject b = gameObjects.get(j);
-               if (!b.isAlive()) continue; // Early exit for dead objects
+            for (int j = i + 1; j < size; j++) {
+                GameObject b = gameObjects.get(j);
+                if (!b.isAlive()) continue; // Early exit for dead objects
 
                // Quick distance check before expensive bounds intersection
-               double dx = a.getX() - b.getX();
-               double dy = a.getY() - b.getY();
-               double distance = dx * dx + dy * dy; // Avoid sqrt for performance
-               double maxDistance = a.getRadius() + b.getRadius();
+            double dx = a.getX() - b.getX();
+            double dy = a.getY() - b.getY();
+            double distance = dx * dx + dy * dy; // Avoid sqrt for performance
+            double maxDistance = a.getRadius() + b.getRadius();
 
-               if (distance <= maxDistance * maxDistance) {
-                   handleCollision(a, b);
-               }
+            if (distance <= maxDistance * maxDistance) {
+                handleCollision(a, b);
+            }
            }
         }
     }
@@ -363,16 +363,20 @@ public class GameEngine implements Runnable {
     }
 
     public void addGameObject(GameObject obj) {
-       synchronized(lock) {
-          gameObjects.add(obj);
-       }
+        synchronized(lock) {
+            gameObjects.add(obj);
+        }
     }
 
-    // Provide a thread-safe snapshot of the game objects for rendering.
+    /**
+     * Provides a thread-safe snapshot of the game objects for rendering.
+     * 
+     * @return A defensive copy of the current game objects list
+     */
     public List<GameObject> getGameObjects() {
-       synchronized(lock) {
-           return new ArrayList<>(gameObjects);
-       }
+        synchronized(lock) {
+            return new ArrayList<>(gameObjects);
+        }
     }
 
     public PlayerShip getPlayer() {
@@ -391,7 +395,7 @@ public class GameEngine implements Runnable {
         return gameOver;
     }
 
-            public void restart() {
+    public void restart() {
         synchronized(lock) {
             // Clear all existing objects
             gameObjects.clear();
@@ -399,7 +403,7 @@ public class GameEngine implements Runnable {
             // Reset score
             score = 0;
 
-                        // Reset existing player ship
+            // Reset existing player ship
             player.reset();
             addGameObject(player);
 
@@ -453,7 +457,7 @@ public class GameEngine implements Runnable {
         }
     }
 
-        private void updateMusicIntensity() {
+    private void updateMusicIntensity() {
         // Use a snapshot of game objects to minimize lock contention
         List<GameObject> snapshot;
         boolean hasPowerUp;

@@ -165,15 +165,13 @@ public class PowerUp extends GameObject {
         }
 
         // Outer glow
-        Color glowColor = new Color(type.getColor().getRed(), type.getColor().getGreen(),
-                                   type.getColor().getBlue(), (int)(100 * alpha));
+        Color glowColor = GraphicsUtils.colorWithAlpha(type.getColor(), alpha * 0.39f);
         g.setColor(glowColor);
         g.fillOval((int)(-15 * pulseScale), (int)(-15 * pulseScale),
                    (int)(30 * pulseScale), (int)(30 * pulseScale));
 
         // Main body
-        Color mainColor = new Color(type.getColor().getRed(), type.getColor().getGreen(),
-                                   type.getColor().getBlue(), (int)(255 * alpha));
+        Color mainColor = GraphicsUtils.colorWithAlpha(type.getColor(), alpha);
         g.setColor(mainColor);
         g.fillOval(-10, -10, 20, 20);
 

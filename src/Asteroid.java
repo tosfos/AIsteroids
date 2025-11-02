@@ -85,9 +85,9 @@ public class Asteroid extends GameObject {
         int blueTint = baseGray - rand.nextInt(15);
 
         baseColor = new Color(
-            Math.min(255, redTint),
-            Math.min(255, greenTint),
-            Math.max(0, blueTint)
+            GraphicsUtils.clampColorComponent(redTint),
+            GraphicsUtils.clampColorComponent(greenTint),
+            GraphicsUtils.clampColorComponent(blueTint)
         );
 
         // Create texture color variations

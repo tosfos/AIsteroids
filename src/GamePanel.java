@@ -501,7 +501,7 @@ public class GamePanel extends JPanel implements KeyListener {
     private void drawEnhancedGameOver(Graphics2D g) {
         // Animated background overlay
         float alpha = 0.8f + 0.2f * (float) Math.sin(System.currentTimeMillis() * 0.003);
-        int bgAlpha = Math.max(0, Math.min(255, (int)(255 * alpha)));
+        int bgAlpha = GraphicsUtils.clampColorComponent((int)(255 * alpha));
         g.setColor(new Color(0, 0, 0, bgAlpha));
         g.fillRect(0, 0, getWidth(), getHeight());
 
@@ -550,7 +550,7 @@ public class GamePanel extends JPanel implements KeyListener {
         y = getHeight() / 2 + 100;
 
         float pulseAlpha = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() * 0.01);
-        int restartAlpha = Math.max(0, Math.min(255, (int)(255 * pulseAlpha)));
+        int restartAlpha = GraphicsUtils.clampColorComponent((int)(255 * pulseAlpha));
         g.setColor(new Color(0, 255, 255, restartAlpha));
         g.drawString(restart, x, y);
     }
