@@ -147,7 +147,7 @@ public class Bullet extends Projectile {
         // Add animated sparkle effects around the bullet
         long time = System.currentTimeMillis();
         for (int i = 0; i < 6; i++) {
-            double sparkleAngle = (time * 0.01 + i * Math.PI / 3) % (2 * Math.PI);
+            double sparkleAngle = (time * 0.01 + i * GameConfig.Angles.PI_OVER_3) % GameConfig.Angles.TWO_PI;
             double sparkleDistance = 8 + 3 * Math.sin(time * 0.02 + i);
             double sparkleX = Math.cos(sparkleAngle) * sparkleDistance;
             double sparkleY = Math.sin(sparkleAngle) * sparkleDistance;

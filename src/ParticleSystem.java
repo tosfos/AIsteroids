@@ -80,7 +80,7 @@ public class ParticleSystem {
 
     public synchronized void createImpactSparks(double x, double y, double impactAngle) {
         for (int i = 0; i < 5; i++) {
-            double spreadAngle = impactAngle + (rand.nextDouble() - 0.5) * Math.PI / 2;
+            double spreadAngle = impactAngle + (rand.nextDouble() - 0.5) * GameConfig.Angles.PI_OVER_2;
             double speed = GameConfig.Effects.Spark.SPEED_MIN + rand.nextDouble() * (GameConfig.Effects.Spark.SPEED_MAX - GameConfig.Effects.Spark.SPEED_MIN);
             double vx = Math.cos(spreadAngle) * speed;
             double vy = Math.sin(spreadAngle) * speed;

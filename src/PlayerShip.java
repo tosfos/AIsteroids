@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class PlayerShip extends GameObject {
     // Ship orientation in radians (initially pointing up: -PI/2)
-    private double angle = -Math.PI/2;
+    private double angle = GameConfig.Angles.NEGATIVE_PI_OVER_2;
     // Flags for input control.
     private boolean turnLeft = false;
     private boolean turnRight = false;
@@ -97,7 +97,7 @@ public class PlayerShip extends GameObject {
 
         AffineTransform old = g.getTransform();
         g.translate(x, y);
-        g.rotate(angle + Math.PI/2);
+        g.rotate(angle + GameConfig.Angles.PI_OVER_2);
 
         // If invulnerable, make the ship blink by reducing opacity
         Composite oldComposite = g.getComposite();
@@ -187,8 +187,8 @@ public class PlayerShip extends GameObject {
     private static final Color TRAIL_COLOR = new Color(0, 150, 255, 150);
 
     // Cache commonly used values
-    private static final double PI_OVER_12 = Math.PI / 12.0; // 15 degrees for spread shot
-    private static final double PI_OVER_8 = Math.PI / 8.0;   // 22.5 degrees for multi shot
+    private static final double PI_OVER_12 = GameConfig.Angles.PI_OVER_12; // 15 degrees for spread shot
+    private static final double PI_OVER_8 = GameConfig.Angles.PI_OVER_8;   // 22.5 degrees for multi shot
     private static final double BULLET_OFFSET_DISTANCE = 15.0;
 
     private void updateEngineTrail(double deltaTime) {
@@ -512,7 +512,7 @@ public class PlayerShip extends GameObject {
         vx = 0;
         vy = 0;
         // Reset angle
-        angle = -Math.PI/2;
+        angle = GameConfig.Angles.NEGATIVE_PI_OVER_2;
         // Reset control flags
         turnLeft = false;
         turnRight = false;

@@ -332,8 +332,8 @@ public class GameEngine implements Runnable {
 
     private void createMultiDirectionImpactSparks(double x, double y, double baseAngle) {
         createImpactSparks(x, y, baseAngle);
-        createImpactSparks(x, y, baseAngle + Math.PI / 2);
-        createImpactSparks(x, y, baseAngle - Math.PI / 2);
+        createImpactSparks(x, y, baseAngle + GameConfig.Angles.PI_OVER_2);
+        createImpactSparks(x, y, baseAngle - GameConfig.Angles.PI_OVER_2);
     }
 
     private void handlePlayerAsteroidCollision(GameObject a, GameObject b) {
@@ -550,15 +550,15 @@ public class GameEngine implements Runnable {
         double x, y;
 
         if (RANDOM.nextBoolean()) {
-            x = RANDOM.nextBoolean() ? -50 : WIDTH + 50;
+            x = RANDOM.nextBoolean() ? -GameConfig.Asteroid.SPAWN_MARGIN : WIDTH + GameConfig.Asteroid.SPAWN_MARGIN;
             y = RANDOM.nextDouble() * HEIGHT;
         } else {
             x = RANDOM.nextDouble() * WIDTH;
-            y = RANDOM.nextBoolean() ? -50 : HEIGHT + 50;
+            y = RANDOM.nextBoolean() ? -GameConfig.Asteroid.SPAWN_MARGIN : HEIGHT + GameConfig.Asteroid.SPAWN_MARGIN;
         }
 
         // Calculate velocity towards screen center with some randomness
-        double angle = Math.atan2(HEIGHT/2 - y, WIDTH/2 - x) + (RANDOM.nextDouble() - 0.5) * Math.PI / 2;
+        double angle = java.lang.Math.atan2(HEIGHT/2 - y, WIDTH/2 - x) + (RANDOM.nextDouble() - 0.5) * GameConfig.Angles.PI_OVER_2;
         double vx = spawnInfo.speed * Math.cos(angle);
         double vy = spawnInfo.speed * Math.sin(angle);
 

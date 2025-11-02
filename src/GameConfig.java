@@ -58,6 +58,19 @@ public final class GameConfig {
         public static final double SPLIT_SPEED_MAX = 1.2; // multiplier
     }
 
+    // === COMMON MATH CONSTANTS ===
+    public static final class Angles {
+        // Angle constants (in radians)
+        public static final double PI_OVER_2 = java.lang.Math.PI / 2.0; // 90 degrees
+        public static final double PI_OVER_3 = java.lang.Math.PI / 3.0; // 60 degrees
+        public static final double PI_OVER_4 = java.lang.Math.PI / 4.0; // 45 degrees
+        public static final double PI_OVER_6 = java.lang.Math.PI / 6.0; // 30 degrees
+        public static final double PI_OVER_8 = java.lang.Math.PI / 8.0; // 22.5 degrees
+        public static final double PI_OVER_12 = java.lang.Math.PI / 12.0; // 15 degrees
+        public static final double TWO_PI = 2.0 * java.lang.Math.PI;
+        public static final double NEGATIVE_PI_OVER_2 = -java.lang.Math.PI / 2.0; // -90 degrees (ship initial orientation)
+    }
+
     // === POWER-UP SETTINGS ===
     public static final class PowerUp {
         public static final double RADIUS = 12.0;
