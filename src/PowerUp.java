@@ -178,11 +178,11 @@ public class PowerUp extends GameObject {
         g.fillOval(-10, -10, 20, 20);
 
         // Inner highlight
-        g.setColor(new Color(255, 255, 255, (int)(150 * alpha)));
+        g.setColor(GraphicsUtils.colorWithAlpha(255, 255, 255, alpha * 0.59f));
         g.fillOval(-6, -6, 12, 12);
 
         // Type indicator symbol
-        g.setColor(new Color(0, 0, 0, (int)(200 * alpha)));
+        g.setColor(GraphicsUtils.colorWithAlpha(0, 0, 0, alpha * 0.78f));
         g.setFont(new Font("Arial", Font.BOLD, 8));
         FontMetrics fm = g.getFontMetrics();
         String symbol = getTypeSymbol();

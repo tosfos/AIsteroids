@@ -255,11 +255,9 @@ public class GameEngine implements Runnable {
     }
 
     private void wrapObjectsAroundScreen() {
+        // Use GameObject's built-in wrapping method to avoid duplication
         for (GameObject obj : gameObjects) {
-            if (obj.getX() < 0) obj.setX(WIDTH);
-            if (obj.getX() > WIDTH) obj.setX(0);
-            if (obj.getY() < 0) obj.setY(HEIGHT);
-            if (obj.getY() > HEIGHT) obj.setY(0);
+            obj.wrapAroundScreen();
         }
     }
 

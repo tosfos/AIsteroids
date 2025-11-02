@@ -95,9 +95,9 @@ public class Asteroid extends GameObject {
         for (int i = 0; i < 4; i++) {
             int variation = rand.nextInt(40) - 20;
             textureColors[i] = new Color(
-                Math.max(0, Math.min(255, baseColor.getRed() + variation)),
-                Math.max(0, Math.min(255, baseColor.getGreen() + variation)),
-                Math.max(0, Math.min(255, baseColor.getBlue() + variation))
+                GraphicsUtils.clampColorComponent(baseColor.getRed(), variation),
+                GraphicsUtils.clampColorComponent(baseColor.getGreen(), variation),
+                GraphicsUtils.clampColorComponent(baseColor.getBlue(), variation)
             );
         }
     }

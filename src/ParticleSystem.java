@@ -158,13 +158,12 @@ public class ParticleSystem {
         @Override
         public void draw(Graphics2D g) {
             float alpha = getAlpha();
-            Color drawColor = new Color(color.getRed(), color.getGreen(), color.getBlue(),
-                                       (int)(255 * alpha));
+            Color drawColor = GraphicsUtils.colorWithAlpha(color, alpha);
             g.setColor(drawColor);
             g.fillOval((int)(x - size), (int)(y - size), (int)(size * 2), (int)(size * 2));
 
             // Inner bright core
-            g.setColor(new Color(255, 255, 200, (int)(150 * alpha)));
+            g.setColor(GraphicsUtils.colorWithAlpha(255, 255, 200, alpha * 0.59f));
             g.fillOval((int)(x - size/2), (int)(y - size/2), (int)(size), (int)(size));
         }
     }
@@ -189,12 +188,12 @@ public class ParticleSystem {
         public void draw(Graphics2D g) {
             if (radius < maxRadius) {
                 float alpha = getAlpha() * 0.7f;
-                g.setColor(new Color(255, 255, 255, (int)(255 * alpha)));
+                g.setColor(GraphicsUtils.colorWithAlpha(255, 255, 255, alpha));
                 g.setStroke(new BasicStroke(3f));
                 g.drawOval((int)(x - radius), (int)(y - radius),
                           (int)(radius * 2), (int)(radius * 2));
 
-                g.setColor(new Color(255, 200, 100, (int)(150 * alpha)));
+                g.setColor(GraphicsUtils.colorWithAlpha(255, 200, 100, alpha * 0.59f));
                 g.setStroke(new BasicStroke(1f));
                 g.drawOval((int)(x - radius), (int)(y - radius),
                           (int)(radius * 2), (int)(radius * 2));
@@ -221,7 +220,7 @@ public class ParticleSystem {
         @Override
         public void draw(Graphics2D g) {
             float alpha = getAlpha();
-            g.setColor(new Color(255, 255, 100, (int)(255 * alpha)));
+            g.setColor(GraphicsUtils.colorWithAlpha(255, 255, 100, alpha));
             g.setStroke(new BasicStroke(2f));
 
             double prevX = x - vx * 0.01;
@@ -258,8 +257,7 @@ public class ParticleSystem {
             g.rotate(rotation);
 
             float alpha = getAlpha();
-            Color drawColor = new Color(color.getRed(), color.getGreen(), color.getBlue(),
-                                       (int)(255 * alpha));
+            Color drawColor = GraphicsUtils.colorWithAlpha(color, alpha);
             g.setColor(drawColor);
             g.fillRect((int)(-size), (int)(-size), (int)(size * 2), (int)(size * 2));
 
@@ -286,7 +284,7 @@ public class ParticleSystem {
         @Override
         public void draw(Graphics2D g) {
             float alpha = getAlpha();
-            Color drawColor = new Color(0, 255, 255, (int)(255 * alpha));
+            Color drawColor = GraphicsUtils.colorWithAlpha(0, 255, 255, alpha);
             g.setColor(drawColor);
 
             // Draw as a small glowing dot

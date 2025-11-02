@@ -129,7 +129,7 @@ public class Bullet extends Projectile {
                 // Trail gets thinner and more transparent as it gets older
                 float thickness = 3.0f * alpha;
 
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha * 0.8f));
+                g.setComposite(GraphicsUtils.createAlphaComposite(alpha * 0.8f));
                 g.setColor(new Color(100, 200, 255));
                 g.setStroke(new BasicStroke(thickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 

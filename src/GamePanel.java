@@ -292,8 +292,8 @@ public class GamePanel extends JPanel implements KeyListener {
         }
 
         // Draw glow effect
-        Color glowColor = new Color(255, 255, 0, (int)(100 * alpha));
-        drawGlowText(g, powerUpMessage, x, y, new Color(255, 255, 0, (int)(255 * alpha)), glowColor);
+        Color glowColor = GraphicsUtils.colorWithAlpha(255, 255, 0, alpha * 0.39f);
+        drawGlowText(g, powerUpMessage, x, y, GraphicsUtils.colorWithAlpha(255, 255, 0, alpha), glowColor);
     }
 
     public void showPowerUpMessage(PowerUp.PowerUpType powerUpType) {
@@ -364,7 +364,7 @@ public class GamePanel extends JPanel implements KeyListener {
             g.fillOval(iconX, iconY, iconSize, iconSize);
 
             // Draw icon symbol
-            g.setColor(new Color(0, 0, 0, (int)(255 * alpha)));
+            g.setColor(GraphicsUtils.colorWithAlpha(0, 0, 0, alpha));
             g.setFont(new Font("Arial", Font.BOLD, 12));
             FontMetrics fm = g.getFontMetrics();
             String symbol = getPowerUpSymbol(type);
@@ -705,8 +705,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         public void draw(Graphics2D g) {
             float alpha = (float)(life / maxLife);
-            Color fadeColor = new Color(color.getRed(), color.getGreen(), color.getBlue(),
-                (int)(color.getAlpha() * alpha));
+            Color fadeColor = GraphicsUtils.colorWithAlpha(color, alpha);
             g.setColor(fadeColor);
             g.fillOval((int)(x - size/2), (int)(y - size/2), (int)size, (int)size);
         }

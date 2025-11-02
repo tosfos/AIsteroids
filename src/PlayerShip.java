@@ -103,7 +103,7 @@ public class PlayerShip extends GameObject {
             float alpha = (float)(GameConfig.Effects.INVULNERABILITY_MIN_ALPHA +
                 (GameConfig.Effects.INVULNERABILITY_MAX_ALPHA - GameConfig.Effects.INVULNERABILITY_MIN_ALPHA) *
                 Math.abs(Math.sin(System.currentTimeMillis() * GameConfig.Effects.INVULNERABILITY_BLINK_SPEED)));
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+            g.setComposite(GraphicsUtils.createAlphaComposite(alpha));
         }
 
         // Create detailed spaceship shape using GeneralPath
@@ -543,8 +543,7 @@ public class PlayerShip extends GameObject {
 
                 public void draw(Graphics2D g) {
             float alpha = (float)(life / maxLife);
-            int particleAlpha = Math.max(0, Math.min(255, (int)(color.getAlpha() * alpha)));
-            Color fadeColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), particleAlpha);
+            Color fadeColor = GraphicsUtils.colorWithAlpha(color, alpha);
 
             // Create glowing effect
             float[] dist = {0.0f, 1.0f};
