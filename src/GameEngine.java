@@ -446,7 +446,7 @@ public class GameEngine implements Runnable {
         // Use a snapshot of game objects to minimize lock contention
         List<GameObject> snapshot;
         boolean hasPowerUp;
-        
+
         synchronized(lock) {
             snapshot = new ArrayList<>(gameObjects);
             hasPowerUp = !player.getActivePowerUps().isEmpty();

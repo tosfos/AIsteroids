@@ -3,6 +3,27 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.util.Random;
 
+/**
+ * Represents an asteroid obstacle in the game.
+ * 
+ * <p>Asteroids come in three sizes (large, medium, small) and split into
+ * smaller asteroids when destroyed. Each asteroid has a randomly generated
+ * irregular shape and unique coloring for visual variety.</p>
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Three size levels (3 = large, 2 = medium, 1 = small)</li>
+ *   <li>Splits into two smaller asteroids when hit (except smallest)</li>
+ *   <li>Random irregular polygon shape generation</li>
+ *   <li>Rotating animation</li>
+ *   <li>Varied color schemes for visual diversity</li>
+ *   <li>Radial gradient lighting effects</li>
+ * </ul>
+ * </p>
+ * 
+ * @author AIsteroids Development Team
+ * @version 1.0
+ */
 public class Asteroid extends GameObject {
     private int size; // 3 = large, 1 = small.
     private double rotation;    // current rotation angle.
@@ -14,6 +35,16 @@ public class Asteroid extends GameObject {
 
     private static final Random rand = new Random();
 
+    /**
+     * Creates a new asteroid at the specified position.
+     * 
+     * @param x Initial X coordinate
+     * @param y Initial Y coordinate
+     * @param size Asteroid size (1 = small, 2 = medium, 3 = large)
+     * @param vx Initial X velocity in pixels per second
+     * @param vy Initial Y velocity in pixels per second
+     * @throws IllegalArgumentException if size is not 1, 2, or 3
+     */
     public Asteroid(double x, double y, int size, double vx, double vy) {
        super(x, y);
        this.size = InputValidator.validateAsteroidSize(size);

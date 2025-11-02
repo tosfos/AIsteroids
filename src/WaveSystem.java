@@ -7,6 +7,24 @@ import java.util.Collections;
 
 /**
  * Manages wave progression, adaptive difficulty, and wave-based statistics.
+ * 
+ * <p>The wave system controls:
+ * <ul>
+ *   <li>Wave progression and numbering</li>
+ *   <li>Boss wave spawning (every 5th wave)</li>
+ *   <li>Adaptive difficulty based on player performance</li>
+ *   <li>Asteroid spawning patterns and counts</li>
+ *   <li>Power-up spawn chance calculations</li>
+ *   <li>Score multipliers based on wave number</li>
+ *   <li>Wave completion bonuses and rewards</li>
+ * </ul>
+ * </p>
+ * 
+ * <p>The system uses a logistic curve for difficulty scaling and tracks
+ * recent wave performance to adjust difficulty dynamically.</p>
+ * 
+ * @author AIsteroids Development Team
+ * @version 1.0
  */
 public class WaveSystem {
     private int currentWave = 1;
