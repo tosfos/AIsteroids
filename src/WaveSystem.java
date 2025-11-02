@@ -122,6 +122,9 @@ public class WaveSystem {
         if (bossWave) {
             bonus *= 3;
         }
+        
+        // Note: Bonus is calculated but not directly applied here
+        // Wave completion scoring is handled by the caller
 
         // Update stats history
         recentStats.offer(currentStats);

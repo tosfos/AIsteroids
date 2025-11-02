@@ -119,8 +119,6 @@ public class Asteroid extends GameObject {
        // Create advanced lighting effect
        float lightX = (float)(-radius * 0.3);
        float lightY = (float)(-radius * 0.3);
-       float darkX = (float)(radius * 0.5);
-       float darkY = (float)(radius * 0.5);
 
        // Main asteroid body with radial gradient
        Color lightColor = new Color(

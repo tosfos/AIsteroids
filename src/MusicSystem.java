@@ -86,7 +86,7 @@ public class MusicSystem {
         if (channels != null) {
             for (MidiChannel channel : channels) {
                 if (channel != null) {
-                    channel.controlChange(7, (int)(127 * masterVolume * 
+                    channel.controlChange(7, (int)(127 * masterVolume *
                         (GameConfig.Audio.MUSIC_VOLUME_BASE + intensity * GameConfig.Audio.MUSIC_VOLUME_PER_LEVEL)));
                 }
             }

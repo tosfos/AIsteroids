@@ -416,8 +416,13 @@ public class PlayerShip extends GameObject {
                 rotationSpeed = Math.toRadians(GameConfig.PowerUp.SPEED_BOOST_ROTATION_SPEED_DEGREES);
                 acceleration = GameConfig.PowerUp.SPEED_BOOST_ACCELERATION;
                 break;
-            // Other power-ups (RAPID_FIRE, SPREAD_SHOT, MULTI_SHOT, LASER_BEAM)
-            // are applied dynamically during fireBullet() calls
+            case RAPID_FIRE:
+            case SPREAD_SHOT:
+            case MULTI_SHOT:
+            case LASER_BEAM:
+                // These power-ups are applied dynamically during fireBullet() calls
+                // No immediate effects needed here
+                break;
         }
     }
 
@@ -456,8 +461,13 @@ public class PlayerShip extends GameObject {
                     rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
                     acceleration = GameConfig.PlayerShip.ACCELERATION;
                     break;
-                // Other power-ups don't need explicit cleanup as they're
-                // checked dynamically during fireBullet() calls
+                case RAPID_FIRE:
+                case SPREAD_SHOT:
+                case MULTI_SHOT:
+                case LASER_BEAM:
+                    // These power-ups don't need explicit cleanup as they're
+                    // checked dynamically during fireBullet() calls
+                    break;
             }
         }
     }

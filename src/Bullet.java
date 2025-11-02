@@ -73,7 +73,6 @@ public class Bullet extends Projectile {
 
        // Create a more impressive bullet effect
        int bulletSize = 12;
-       float radius = bulletSize / 2f;
 
        // Multi-layer glow effect
        Color[] glowColors = {
