@@ -66,15 +66,19 @@ public class GameEngine implements Runnable {
 
             // Start controlled wave manager thread
             startWaveManager();
-        } catch (RuntimeException e) {
-            // Re-throw runtime exceptions as-is
+        } catch (GameInitializationException e) {
+            // Re-throw game initialization exceptions as-is
             cleanup();
             throw e;
+        } catch (RuntimeException e) {
+            // Wrap other runtime exceptions
+            cleanup();
+            throw new GameInitializationException("Failed to initialize game: " + e.getMessage(), e);
         } catch (Exception e) {
             System.err.println("Error initializing GameEngine: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             e.printStackTrace();
             cleanup();
-            throw new RuntimeException("Failed to initialize game", e);
+            throw new GameInitializationException("Failed to initialize game", e);
         }
     }
 

@@ -18,7 +18,7 @@ import java.util.List;
  * @version 1.0
  */
 public class CollisionHandler {
-    
+
     private final GameEngine gameEngine;
 
     /**
@@ -209,4 +209,3 @@ public class CollisionHandler {
         gameEngine.showPowerUpMessage(powerUp.getType());
     }
 }
-
