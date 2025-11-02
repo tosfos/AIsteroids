@@ -62,11 +62,14 @@ public final class GameConfig {
     public static final class PowerUp {
         public static final double RADIUS = 12.0;
         public static final double SPEED = 30.0;
-        public static final double LIFETIME = 15.0; // seconds before despawning
+        public static final double LIFETIME = 30.0; // seconds before despawning (25s + 5s fade)
         public static final double RAPID_FIRE_DURATION = 10.0; // seconds
         public static final double RAPID_FIRE_MULTIPLIER = 3.0; // fire rate multiplier
-        public static final double SHIELD_DURATION = 8.0; // seconds
-        public static final double MULTI_SHOT_DURATION = 12.0; // seconds
+        public static final double SHIELD_DURATION = 12.0; // seconds
+        public static final double SPREAD_SHOT_DURATION = 8.0; // seconds
+        public static final double SPEED_BOOST_DURATION = 6.0; // seconds
+        public static final double MULTI_SHOT_DURATION = 15.0; // seconds
+        public static final double LASER_BEAM_DURATION = 20.0; // seconds
         public static final double EXTRA_LIFE_RARITY = 0.1; // 10% chance
 
         // Speed boost effect targets
@@ -84,6 +87,16 @@ public final class GameConfig {
         public static final int MAX_NORMAL_ASTEROIDS = 25; // Maximum asteroids in normal waves
         public static final int BASE_BOSS_ASTEROIDS = 3; // Starting number of boss wave asteroids
         public static final int MAX_BOSS_ASTEROIDS = 15; // Maximum asteroids in boss waves
+
+        // Adaptive difficulty settings
+        public static final double DIFFICULTY_SMOOTHING_FACTOR = 0.3; // Logistic curve smoothing
+        public static final double BASE_DIFFICULTY = 1.0;
+        public static final double MAX_DIFFICULTY = 5.0;
+        public static final double PERFORMANCE_SCALE_FACTOR = 0.2; // How much performance affects difficulty
+        public static final int PERFORMANCE_HISTORY_SIZE = 3; // Number of waves to consider for adjustment
+        public static final double DIFFICULTY_ADJUSTMENT_RATE = 0.1; // Per-wave adjustment strength
+        public static final double MIN_DIFFICULTY_MULTIPLIER = 0.5; // Lower bound for performance scaling
+        public static final double MAX_DIFFICULTY_MULTIPLIER = 2.0; // Upper bound for performance scaling
 
         // Scoring and bonuses
         public static final int SCORE_MULTIPLIER_MAX = 5; // maximum score multiplier

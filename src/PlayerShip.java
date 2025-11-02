@@ -301,7 +301,7 @@ public class PlayerShip extends GameObject {
     }
 
     // Fire a bullet from the ship's tip.
-    public List<Bullet> fireBullet() {
+    public List<Projectile> fireBullet() {
         // Check fire rate
         if (lastFireTime < (1.0 / getCurrentFireRate())) {
             return new ArrayList<>();
@@ -310,11 +310,16 @@ public class PlayerShip extends GameObject {
         lastFireTime = 0;
         SoundManager.playLaser();
 
-        List<Bullet> bullets = new ArrayList<>();
+        List<Projectile> bullets = new ArrayList<>();
         double bulletX = x + Math.cos(angle) * 15;
         double bulletY = y + Math.sin(angle) * 15;
 
-        if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
+        if (activePowerUps.containsKey(PowerUp.PowerUpType.LASER_BEAM)) {
+            // Fire a high-powered laser beam
+            bullets.add(new LaserBeam(bulletX, bulletY, angle));
+            // Play laser beam sound (higher pitch than normal laser)
+            SoundManager.playLaser();
+        } else if (activePowerUps.containsKey(PowerUp.PowerUpType.SPREAD_SHOT)) {
             // Fire 3 bullets in spread pattern
             for (int i = -1; i <= 1; i++) {
                 double spreadAngle = angle + (i * Math.PI / 12); // 15 degree spread

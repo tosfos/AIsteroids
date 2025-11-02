@@ -7,7 +7,12 @@ echo "Running AIsteroids Test Suite..."
 
 # Build everything
 echo "Building source and test files..."
-javac -d bin -cp "lib/*" src/*.java test/*.java
+# Compile all Java files recursively (src and test)
+find src -name "*.java" > sources.txt
+find test -name "*.java" > testsources.txt
+cat testsources.txt >> sources.txt
+javac -d bin -cp "lib/*" @sources.txt
+rm sources.txt testsources.txt
 
 if [ $? -ne 0 ]; then
     echo "Build failed!"

@@ -1,0 +1,70 @@
+Media Automation Stack Setup (Sonarr, Radarr, Prowlarr, qBittorrent, Docker Compose)
+====================================================================
+
+This document describes the specifics of the media automation setup on this system (192.168.1.201), focusing on the docker-compose configuration, folder mappings, and management. It is tailored to this installation and omits generic *arr or Docker help.
+
+1. Docker Compose Stack
+-----------------------
+- All *arr containers (Sonarr, Radarr, Prowlarr) and qBittorrent are managed via a single `docker-compose.yml` in `/home/ike`.
+- All containers are on the default compose network, allowing them to communicate using their container names as hostnames (e.g., `sonarr`, `radarr`, `prowlarr`, `qbittorrent-nox`).
+- The stack is set to auto-start on boot (Docker service is enabled).
+
+2. Folder Mappings (Volumes)
+----------------------------
+- All config and media folders are mapped as follows:
+  * Sonarr:   `/home/ike/sonarr/config:/config`, `/home/ike/media/series:/tv`, `/home/ike/media/downloads:/downloads`
+  * Radarr:   `/home/ike/radarr/config:/config`, `/home/ike/media/movies:/movies`, `/home/ike/media/downloads:/downloads`
+  * Prowlarr: `/home/ike/prowlarr/config:/config`
+  * qBittorrent: `/home/ike/qbittorrent/config:/config`, `/home/ike/media/downloads:/downloads`
+- All mapped folders are owned by UID 1000 (user ike) to ensure read/write access from inside the containers.
+- If you add new folders, ensure they are owned by UID 1000: `sudo chown -R 1000:1000 /path/to/folder`
+
+3. Web UI Access
+----------------
+- Sonarr:      http://192.168.1.201:8989
+- Radarr:      http://192.168.1.201:7878
+- Prowlarr:    http://192.168.1.201:9696
+- qBittorrent: http://192.168.1.201:8080
+
+4. Inter-Container Communication
+-------------------------------
+- In Prowlarr, add Sonarr and Radarr as apps using these URLs:
+    * Sonarr:  `http://sonarr:8989`
+    * Radarr:  `http://radarr:7878`
+- Use the API keys from Sonarr/Radarr (Settings → General) when adding them in Prowlarr.
+- In Sonarr/Radarr, set the download client host to `qbittorrent-nox` and port to `8080`.
+- Do not use `localhost` or the host IP for inter-container communication.
+
+5. Managing the Stack
+---------------------
+- Start all containers:   `sudo docker compose -f /home/ike/docker-compose.yml up -d`
+- Stop all containers:    `sudo docker compose -f /home/ike/docker-compose.yml down`
+- View status:            `sudo docker compose -f /home/ike/docker-compose.yml ps`
+- View logs:              `sudo docker compose -f /home/ike/docker-compose.yml logs -f`
+- Update images:          `sudo docker compose -f /home/ike/docker-compose.yml pull && sudo docker compose -f /home/ike/docker-compose.yml up -d`
+- The stack will auto-start after a reboot (no user login required).
+
+6. qBittorrent Credentials
+--------------------------
+- On first run, the Web UI admin password is randomly generated and shown in the container logs. To retrieve it:
+    * Run: `sudo docker compose logs qbittorrent-nox | grep -A 5 "WebUI administrator username is"`
+    * The username is `admin` and the password is the random string shown.
+    * You should set your own username and password in the Web UI after first login.
+- If you forget your credentials, stop the container, delete the WebUI.Username and WebUI.Password lines from `/home/ike/qbittorrent/config/qBittorrent/qBittorrent.conf`, and restart the container to get a new temporary password in the logs.
+
+7. Jellyfin (Media Server)
+--------------------------
+- Installed natively (not in Docker) via the official Jellyfin repository for Ubuntu 24.04 (noble).
+- Service is managed by systemd: `sudo systemctl status jellyfin`, `sudo systemctl restart jellyfin`, etc.
+- Accessible on the host at: http://192.168.1.201:8096
+- Media libraries can be added via the Jellyfin web UI. If you want Jellyfin to see your media folders (e.g., `/home/ike/media/series` or `/home/ike/media/movies`), make sure the `jellyfin` system user has read access to those directories.
+
+8. Troubleshooting
+------------------
+- If a mapped folder is not selectable in the UI, ensure it exists on the host and is owned by UID 1000.
+- For inter-container connection errors, verify the containers are up and use the correct internal URLs.
+- If containers do not start after reboot, check Docker service status: `sudo systemctl status docker`
+- For logs, use `sudo docker compose logs <service>`
+
+---
+This setup is designed for reliability, portability, and ease of management. For further changes, always ensure new containers are added to the compose file with correct volume mappings and permissions.

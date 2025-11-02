@@ -607,8 +607,8 @@ public class GamePanel extends JPanel implements KeyListener {
             case KeyEvent.VK_SPACE:
                 if (!showingHelp) {
                     // Fire a bullet from the player's ship.
-                    List<Bullet> bullets = player.fireBullet();
-                    for (Bullet bullet : bullets) {
+                    List<Projectile> bullets = player.fireBullet();
+                    for (Projectile bullet : bullets) {
                         engine.addGameObject(bullet);
                     }
                 }

@@ -3,7 +3,7 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Bullet extends GameObject {
+public class Bullet extends Projectile {
     private double angle;
     private double speed = GameConfig.Bullet.SPEED; // pixels per second.
     private double lifespan = GameConfig.Bullet.LIFETIME; // Bullet lifetime from config
