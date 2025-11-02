@@ -226,19 +226,30 @@ public class GamePanel extends JPanel implements KeyListener {
         // Create a subtle glow effect for the HUD
         g.setFont(hudFont);
 
-        // Lives display with ship icons
+        drawLivesIndicator(g);
+        drawScore(g);
+        drawWaveInfo(g);
+        drawAsteroidsRemaining(g);
+        drawScoreMultiplier(g);
+        drawPowerUpStatusIcons(g);
+        drawHUDBorder(g);
+    }
+
+    private void drawLivesIndicator(Graphics2D g) {
         g.setColor(new Color(0, 255, 255, 200)); // Cyan with transparency
         g.drawString("LIVES:", 10, 25);
 
         for (int i = 0; i < player.getLives(); i++) {
             drawMiniShip(g, GameConfig.UI.LIVES_ICON_X + i * GameConfig.UI.LIVES_DISPLAY_SPACING, GameConfig.UI.LIVES_ICON_Y);
         }
+    }
 
-        // Score with glow effect
+    private void drawScore(Graphics2D g) {
         String scoreText = "SCORE: " + String.format("%06d", engine.getScore());
         drawGlowText(g, scoreText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.SCORE_TEXT_Y, GameConfig.UI.SCORE_TEXT_COLOR, GameConfig.UI.SCORE_GLOW_COLOR);
+    }
 
-        // Wave information
+    private void drawWaveInfo(Graphics2D g) {
         WaveSystem waveSystem = engine.getWaveSystem();
         String waveText = "WAVE: " + waveSystem.getCurrentWave();
         if (waveSystem.isBossWave()) {
@@ -248,13 +259,17 @@ public class GamePanel extends JPanel implements KeyListener {
             g.setColor(GameConfig.UI.NORMAL_WAVE_COLOR);
         }
         g.drawString(waveText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.WAVE_TEXT_Y);
+    }
 
-        // Asteroids remaining
+    private void drawAsteroidsRemaining(Graphics2D g) {
+        WaveSystem waveSystem = engine.getWaveSystem();
         String asteroidsText = "ASTEROIDS: " + waveSystem.getAsteroidsRemaining();
         g.setColor(GameConfig.UI.HUD_TEXT_COLOR);
         g.drawString(asteroidsText, GameConfig.UI.HUD_MARGIN, GameConfig.UI.ASTEROIDS_TEXT_Y);
+    }
 
-        // Score multiplier indicator
+    private void drawScoreMultiplier(Graphics2D g) {
+        WaveSystem waveSystem = engine.getWaveSystem();
         if (waveSystem.getScoreMultiplier() > 1) {
             String multiplierText = "x" + waveSystem.getScoreMultiplier();
             g.setColor(new Color(255, 255, 0, 255));
@@ -262,11 +277,9 @@ public class GamePanel extends JPanel implements KeyListener {
             g.drawString(multiplierText, engine.getScore() > 0 ? 200 : 150, 50);
             g.setFont(hudFont); // Reset font
         }
+    }
 
-        // Power-up status indicators
-        drawPowerUpStatusIcons(g);
-
-        // Add a subtle border effect
+    private void drawHUDBorder(Graphics2D g) {
         g.setColor(GameConfig.UI.HUD_BORDER_COLOR);
         g.setStroke(new BasicStroke(2));
         g.drawRect(GameConfig.UI.HUD_MARGIN - 5, GameConfig.UI.HUD_MARGIN - 5, GameConfig.UI.HUD_WIDTH, GameConfig.UI.HUD_HEIGHT);

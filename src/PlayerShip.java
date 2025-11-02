@@ -186,7 +186,7 @@ public class PlayerShip extends GameObject {
 
     // Reusable color to reduce object allocation
     private static final Color TRAIL_COLOR = new Color(0, 150, 255, 150);
-    
+
     // Cache commonly used values
     private static final double PI_OVER_12 = Math.PI / 12.0; // 15 degrees for spread shot
     private static final double PI_OVER_8 = Math.PI / 8.0;   // 22.5 degrees for multi shot

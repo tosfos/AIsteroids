@@ -293,35 +293,47 @@ public class GameEngine implements Runnable {
         Asteroid asteroid = (a instanceof Asteroid) ? (Asteroid) a : (Asteroid) b;
 
         if (isLaserBeam) {
-            LaserBeam beam = (a instanceof LaserBeam) ? (LaserBeam) a : (LaserBeam) b;
-            // High-powered beam reduces asteroid size by multiple levels
-            for (int i = 0; i < beam.getDamage(); i++) {
-                if (asteroid.isAlive()) { // Keep damaging until destroyed
-                    asteroid.hit(this);
-                }
-            }
-            // Create larger impact effect
-            double impactAngle = Math.atan2(asteroid.getY() - beam.getY(),
-                                          asteroid.getX() - beam.getX());
-            createImpactSparks(asteroid.getX(), asteroid.getY(), impactAngle);
-            createImpactSparks(asteroid.getX(), asteroid.getY(), impactAngle + Math.PI/2);
-            createImpactSparks(asteroid.getX(), asteroid.getY(), impactAngle - Math.PI/2);
-            // Play higher pitched hit sound
-            InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
-                "Failed to play asteroid hit sound");
+            handleLaserBeamAsteroidCollision(a, b, asteroid);
         } else {
-            Bullet bullet = (a instanceof Bullet) ? (Bullet) a : (Bullet) b;
-            bullet.setAlive(false);
-
-            // Create normal impact sparks
-            double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
-                                          asteroid.getX() - bullet.getX());
-            createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
-
-            asteroid.hit(this); // Asteroid may split or get destroyed
-            InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
-                "Failed to play asteroid hit sound");
+            handleBulletAsteroidCollisionInternal(a, b, asteroid);
         }
+    }
+
+    private void handleLaserBeamAsteroidCollision(GameObject a, GameObject b, Asteroid asteroid) {
+        LaserBeam beam = (a instanceof LaserBeam) ? (LaserBeam) a : (LaserBeam) b;
+        // High-powered beam reduces asteroid size by multiple levels
+        for (int i = 0; i < beam.getDamage(); i++) {
+            if (asteroid.isAlive()) { // Keep damaging until destroyed
+                asteroid.hit(this);
+            }
+        }
+        // Create larger impact effect with multiple spark directions
+        double impactAngle = Math.atan2(asteroid.getY() - beam.getY(),
+                                      asteroid.getX() - beam.getX());
+        createMultiDirectionImpactSparks(asteroid.getX(), asteroid.getY(), impactAngle);
+        // Play higher pitched hit sound
+        InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
+            "Failed to play asteroid hit sound");
+    }
+
+    private void handleBulletAsteroidCollisionInternal(GameObject a, GameObject b, Asteroid asteroid) {
+        Bullet bullet = (a instanceof Bullet) ? (Bullet) a : (Bullet) b;
+        bullet.setAlive(false);
+
+        // Create normal impact sparks
+        double impactAngle = Math.atan2(asteroid.getY() - bullet.getY(),
+                                      asteroid.getX() - bullet.getX());
+        createImpactSparks(bullet.getX(), bullet.getY(), impactAngle);
+
+        asteroid.hit(this); // Asteroid may split or get destroyed
+        InputValidator.safeExecute(() -> SoundManager.playAsteroidHit(),
+            "Failed to play asteroid hit sound");
+    }
+
+    private void createMultiDirectionImpactSparks(double x, double y, double baseAngle) {
+        createImpactSparks(x, y, baseAngle);
+        createImpactSparks(x, y, baseAngle + Math.PI / 2);
+        createImpactSparks(x, y, baseAngle - Math.PI / 2);
     }
 
     private void handlePlayerAsteroidCollision(GameObject a, GameObject b) {
