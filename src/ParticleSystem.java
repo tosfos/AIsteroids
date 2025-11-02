@@ -4,6 +4,34 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Manages particle effects for visual enhancements in the game.
+ *
+ * <p>This class handles creation, update, and rendering of various particle types including:
+ * <ul>
+ *   <li>Explosion particles (when asteroids are destroyed)</li>
+ *   <li>Spark particles (impact effects)</li>
+ *   <li>Debris particles (asteroid fragments)</li>
+ *   <li>Warp particles (ship teleportation effects)</li>
+ *   <li>Shockwave particles (area effects)</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Thread-safe particle management using CopyOnWriteArrayList</li>
+ *   <li>Automatic cleanup of dead particles</li>
+ *   <li>Memory leak prevention via maximum particle limits</li>
+ *   <li>Synchronized update and rendering for thread safety</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Thread safety: All public methods are synchronized to ensure thread-safe
+ * access from multiple threads (game update thread and rendering thread).</p>
+ *
+ * @author AIsteroids Development Team
+ * @version 1.0
+ */
 public class ParticleSystem {
     private List<Particle> particles;
     private static final Random rand = new Random();
@@ -15,13 +43,13 @@ public class ParticleSystem {
     public synchronized void update(double deltaTime) {
         // Remove dead particles first
         particles.removeIf(particle -> !particle.isAlive());
-        
+
         // Enforce maximum particle count to prevent memory leaks
         // Remove oldest particles if we exceed the limit
         while (particles.size() > GameConfig.Effects.MAX_TOTAL_PARTICLES) {
             particles.remove(0);
         }
-        
+
         for (Particle particle : particles) {
             particle.update(deltaTime);
         }

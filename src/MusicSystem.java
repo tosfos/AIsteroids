@@ -3,6 +3,29 @@ import javax.sound.midi.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Manages background music using the Java MIDI system.
+ *
+ * <p>This class provides dynamic music that adapts to game intensity and state.
+ * The music system uses MIDI sequencer and synthesizer to generate procedural
+ * music in real-time based on game events.</p>
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Dynamic intensity adjustment based on game state (asteroid count, lives, power-ups)</li>
+ *   <li>Procedural music generation using MIDI tracks</li>
+ *   <li>Volume control for master music level</li>
+ *   <li>Graceful degradation if MIDI is unavailable</li>
+ *   <li>Thread-safe music control</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Thread safety: Uses AtomicBoolean and AtomicInteger for thread-safe state management.
+ * MIDI operations are not inherently thread-safe and should be called from a single thread.</p>
+ *
+ * @author AIsteroids Development Team
+ * @version 1.0
+ */
 public class MusicSystem {
     private static Sequencer sequencer;
     private static Synthesizer synthesizer;

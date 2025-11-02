@@ -4,6 +4,42 @@ import java.util.concurrent.Executors;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Manages sound effects for the game using procedural audio synthesis.
+ *
+ * <p>This class generates and plays sound effects on-the-fly without requiring
+ * external audio files. All sounds are procedurally generated using mathematical
+ * functions to create various audio effects.</p>
+ *
+ * <p>Sound effects include:
+ * <ul>
+ *   <li>Laser fire (with variations)</li>
+ *   <li>Explosion sounds (with variations)</li>
+ *   <li>Thruster sounds (engine effects)</li>
+ *   <li>Ambient space sound (background atmosphere)</li>
+ *   <li>Asteroid hit sounds</li>
+ *   <li>Power-up collection sounds</li>
+ *   <li>Game over and level up sounds</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Procedural audio generation (no external files needed)</li>
+ *   <li>Stereo sound with panning effects</li>
+ *   <li>Reverb and audio effects processing</li>
+ *   <li>Master volume control</li>
+ *   <li>Asynchronous sound playback using executor service</li>
+ *   <li>Sound variations for audio variety</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Thread safety: Sound playback is asynchronous using ExecutorService.
+ * All sound generation and playback operations are thread-safe.</p>
+ *
+ * @author AIsteroids Development Team
+ * @version 1.0
+ */
 public class SoundManager {
     private static final int SAMPLE_RATE = GameConfig.Audio.SFX_SAMPLE_RATE;  // CD quality audio
     private static final int BITS_PER_SAMPLE = GameConfig.Audio.SFX_BITS_PER_SAMPLE;

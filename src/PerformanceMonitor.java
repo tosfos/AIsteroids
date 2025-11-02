@@ -30,7 +30,11 @@ public class PerformanceMonitor {
     private static FrameTimeOutlierCallback outlierCallback = null;
 
     /**
-     * Records a frame completion and updates metrics.
+     * Records a frame completion and updates performance metrics.
+     * 
+     * <p>This method should be called once per frame to track frame timing,
+     * calculate FPS, and monitor performance. It's thread-safe and designed
+     * for high-frequency calls (60+ times per second).</p>
      */
     public static void recordFrame() {
         long currentTime = System.nanoTime();
@@ -80,7 +84,17 @@ public class PerformanceMonitor {
     }
 
     /**
-     * Gets the current performance statistics snapshot.
+     * Gets a snapshot of current performance statistics.
+     * 
+     * <p>The returned statistics include:
+     * <ul>
+     *   <li>Average FPS (frames per second)</li>
+     *   <li>Current memory usage (MB)</li>
+     *   <li>Memory allocation rate (MB/s)</li>
+     * </ul>
+     * </p>
+     * 
+     * @return Immutable snapshot of current performance metrics
      */
     public static PerfStats getStats() {
         lock.readLock().lock();
@@ -96,7 +110,11 @@ public class PerformanceMonitor {
     }
 
     /**
-     * Gets current memory usage in MB.
+     * Gets current memory usage in megabytes.
+     * 
+     * <p>Calculates used memory as: (totalMemory - freeMemory) / 1024^2</p>
+     * 
+     * @return Current memory usage in MB
      */
     public static double getCurrentMemoryMB() {
         long totalMemory = runtime.totalMemory();
@@ -127,7 +145,17 @@ public class PerformanceMonitor {
     }
 
     /**
-     * Triggers garbage collection if memory usage is high.
+     * Checks memory pressure and triggers garbage collection if necessary.
+     * 
+     * <p>If memory usage exceeds the configured threshold, this method will:
+     * <ul>
+     *   <li>Request garbage collection via System.gc()</li>
+     *   <li>Pause briefly to allow GC to complete</li>
+     * </ul>
+     * </p>
+     * 
+     * <p>This method should be called periodically (e.g., every frame or every few seconds)
+     * to prevent memory pressure issues during long gameplay sessions.</p>
      */
     public static void checkMemoryPressure() {
         long maxMemory = runtime.maxMemory();
@@ -149,7 +177,14 @@ public class PerformanceMonitor {
     }
 
     /**
-     * Sets a callback to be notified of frame time outliers.
+     * Sets a callback to be notified when frame times exceed normal thresholds.
+     * 
+     * <p>Frame time outliers indicate performance issues or frame drops.
+     * The callback receives both the outlier frame time and the average frame time
+     * for comparison.</p>
+     * 
+     * @param callback Callback to invoke when frame time outliers are detected,
+     *                 or null to disable outlier detection
      */
     public static void setFrameTimeOutlierCallback(FrameTimeOutlierCallback callback) {
         outlierCallback = callback;
@@ -157,6 +192,9 @@ public class PerformanceMonitor {
 
     /**
      * Immutable snapshot of performance statistics.
+     * 
+     * <p>This class provides a read-only view of performance metrics at a specific
+     * point in time. All values are captured atomically to ensure consistency.</p>
      */
     public static class PerfStats {
         private final double fps;
