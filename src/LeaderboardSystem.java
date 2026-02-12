@@ -119,7 +119,7 @@ public class LeaderboardSystem {
 
     private static void checkAchievements() {
         for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement.getName())) {
+            if (!unlockedAchievements.contains(achievement.name())) {
                 boolean unlocked = false;
 
                 switch (achievement) {
