@@ -7,14 +7,19 @@ public class LeaderboardSystem {
     private static final String ACHIEVEMENTS_FILE = "achievements.dat";
     private static final int MAX_LEADERBOARD_ENTRIES = 10;
 
+    /** Lock for all access to leaderboard, unlockedAchievements, and gameStats (game thread + EDT). */
+    private static final Object LOCK = new Object();
+
     private static List<LeaderboardEntry> leaderboard = new ArrayList<>();
     private static Set<String> unlockedAchievements = new HashSet<>();
     private static Map<String, Integer> gameStats = new HashMap<>();
 
     static {
-        loadLeaderboard();
-        loadAchievements();
-        initializeStats();
+        synchronized (LOCK) {
+            loadLeaderboard();
+            loadAchievements();
+            initializeStats();
+        }
     }
 
     public static class LeaderboardEntry implements Serializable {
@@ -81,45 +86,57 @@ public class LeaderboardSystem {
     }
 
     public static void addScore(String playerName, int score, int wave) {
-        LeaderboardEntry entry = new LeaderboardEntry(playerName, score, wave);
-        leaderboard.add(entry);
+        synchronized (LOCK) {
+            LeaderboardEntry entry = new LeaderboardEntry(playerName, score, wave);
+            leaderboard.add(entry);
 
-        // Sort by score (descending)
-        leaderboard.sort((a, b) -> Integer.compare(b.score, a.score));
+            // Sort by score (descending)
+            leaderboard.sort((a, b) -> Integer.compare(b.score, a.score));
 
-        // Keep only top entries
-        if (leaderboard.size() > MAX_LEADERBOARD_ENTRIES) {
-            leaderboard = new ArrayList<>(leaderboard.subList(0, MAX_LEADERBOARD_ENTRIES));
+            // Keep only top entries
+            if (leaderboard.size() > MAX_LEADERBOARD_ENTRIES) {
+                leaderboard = new ArrayList<>(leaderboard.subList(0, MAX_LEADERBOARD_ENTRIES));
+            }
+
+            saveLeaderboard();
         }
-
-        saveLeaderboard();
     }
 
     public static List<LeaderboardEntry> getLeaderboard() {
-        return new ArrayList<>(leaderboard);
+        synchronized (LOCK) {
+            return new ArrayList<>(leaderboard);
+        }
     }
 
     public static void updateGameStats(String statName, int value) {
-        gameStats.put(statName, gameStats.getOrDefault(statName, 0) + value);
-        checkAchievements();
+        synchronized (LOCK) {
+            gameStats.put(statName, gameStats.getOrDefault(statName, 0) + value);
+            checkAchievements();
+        }
     }
 
     public static void setGameStat(String statName, int value) {
-        gameStats.put(statName, value);
-        checkAchievements();
+        synchronized (LOCK) {
+            gameStats.put(statName, value);
+            checkAchievements();
+        }
     }
 
     public static int getGameStat(String statName) {
-        return gameStats.getOrDefault(statName, 0);
+        synchronized (LOCK) {
+            return gameStats.getOrDefault(statName, 0);
+        }
     }
 
     public static Map<String, Integer> getAllStats() {
-        return new HashMap<>(gameStats);
+        synchronized (LOCK) {
+            return new HashMap<>(gameStats);
+        }
     }
 
     private static void checkAchievements() {
         for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement.getName())) {
+            if (!unlockedAchievements.contains(achievement.name())) {
                 boolean unlocked = false;
 
                 switch (achievement) {
@@ -175,38 +192,46 @@ public class LeaderboardSystem {
     }
 
     public static void unlockAchievement(Achievement achievement) {
-        String name = achievement.name();  // Use enum constant name instead of display name
-        if (!unlockedAchievements.contains(name)) {
-            unlockedAchievements.add(name);
-            saveAchievements();
-            // Achievement notification would be handled by UI
+        synchronized (LOCK) {
+            String name = achievement.name();  // Use enum constant name instead of display name
+            if (!unlockedAchievements.contains(name)) {
+                unlockedAchievements.add(name);
+                saveAchievements();
+                // Achievement notification would be handled by UI
+            }
         }
     }
 
     public static boolean isAchievementUnlocked(Achievement achievement) {
-        return unlockedAchievements.contains(achievement.name());
+        synchronized (LOCK) {
+            return unlockedAchievements.contains(achievement.name());
+        }
     }
 
     public static Set<Achievement> getUnlockedAchievements() {
-        Set<Achievement> result = new HashSet<>();
-        for (String name : unlockedAchievements) {
-            try {
-                result.add(Achievement.valueOf(name));
-            } catch (IllegalArgumentException e) {
-                System.err.println("Warning: Found invalid achievement in storage: " + name);
+        synchronized (LOCK) {
+            Set<Achievement> result = new HashSet<>();
+            for (String name : unlockedAchievements) {
+                try {
+                    result.add(Achievement.valueOf(name));
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Warning: Found invalid achievement in storage: " + name);
+                }
             }
+            return result;
         }
-        return result;
     }
 
     public static List<Achievement> getLockedAchievements() {
-        List<Achievement> locked = new ArrayList<>();
-        for (Achievement achievement : Achievement.values()) {
-            if (!unlockedAchievements.contains(achievement.name())) {
-                locked.add(achievement);
+        synchronized (LOCK) {
+            List<Achievement> locked = new ArrayList<>();
+            for (Achievement achievement : Achievement.values()) {
+                if (!unlockedAchievements.contains(achievement.name())) {
+                    locked.add(achievement);
+                }
             }
+            return locked;
         }
-        return locked;
     }
 
     private static void loadLeaderboard() {
@@ -281,8 +306,10 @@ public class LeaderboardSystem {
     }
 
     public static void gameEnded(int finalScore, int finalWave) {
-        setGameStat("total_score", getGameStat("total_score") + finalScore);
-        setGameStat("highest_wave", Math.max(getGameStat("highest_wave"), finalWave));
+        synchronized (LOCK) {
+            setGameStat("total_score", getGameStat("total_score") + finalScore);
+            setGameStat("highest_wave", Math.max(getGameStat("highest_wave"), finalWave));
+        }
     }
 
     public static void waveCompleted(int wave, boolean perfect, boolean boss, long completionTime) {
@@ -321,9 +348,11 @@ public class LeaderboardSystem {
     }
 
     public static void resetStats() {
-        gameStats.clear();
-        initializeStats();
-        saveAchievements();
+        synchronized (LOCK) {
+            gameStats.clear();
+            initializeStats();
+            saveAchievements();
+        }
     }
 
     public static String getPlayerName() {
