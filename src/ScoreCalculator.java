@@ -89,6 +89,19 @@ public class ScoreCalculator {
         return LARGE_ASTEROID_SCORE;
     }
 
+    /**
+     * Returns base points for destroying an asteroid of the given size level.
+     * Uses GameConfig.Scoring constants for consistency with gameplay scoring.
+     */
+    public static int getAsteroidPoints(int size) {
+        switch (size) {
+            case 1: return GameConfig.Scoring.SMALL_ASTEROID_POINTS;
+            case 2: return GameConfig.Scoring.MEDIUM_ASTEROID_POINTS;
+            case 3: return GameConfig.Scoring.LARGE_ASTEROID_POINTS;
+            default: return GameConfig.Scoring.SMALL_ASTEROID_POINTS;
+        }
+    }
+
     public double calculateScoreMultiplier(int currentWave, int powerUpCount, boolean hasShield) {
         double multiplier = 1.0;
 

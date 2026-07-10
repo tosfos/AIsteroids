@@ -148,7 +148,7 @@ java -ea -cp bin:lib/* PowerUpTest
 java -ea -cp bin:lib/* WaveSystemTest
 ```
 
-📚 **[Complete Testing Guide →](TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.
+📚 **[Complete Testing Guide →](docs/TESTING.md)** - Comprehensive documentation on testing architecture, adding tests, and troubleshooting.
 
 ## 🏅 **Achievement Guide**
 

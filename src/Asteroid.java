@@ -26,6 +26,7 @@ import java.util.Random;
  */
 public class Asteroid extends GameObject {
     private int size; // 3 = large, 1 = small.
+    private int splitCount = 2; // Number of fragments when destroyed
     private double rotation;    // current rotation angle.
     private double rotationSpeed;  // rotation speed in radians per second.
     private double radius;      // visual radius (based on size).
@@ -46,8 +47,13 @@ public class Asteroid extends GameObject {
      * @throws IllegalArgumentException if size is not 1, 2, or 3
      */
     public Asteroid(double x, double y, int size, double vx, double vy) {
+       this(x, y, size, vx, vy, 2);
+    }
+
+    public Asteroid(double x, double y, int size, double vx, double vy, int splitCount) {
        super(x, y);
        this.size = InputValidator.validateAsteroidSize(size);
+       this.splitCount = Math.max(2, splitCount);
        this.vx = vx;
        this.vy = vy;
        this.radius = size * GameConfig.Asteroid.RADIUS_PER_SIZE;
@@ -174,43 +180,38 @@ public class Asteroid extends GameObject {
        // Trigger particle explosion effect
        triggerExplosionEffect(engine);
 
+       awardPoints(engine);
+
        if (size > 1) {
           double speed = Math.hypot(vx, vy);
           double baseAngle = Math.atan2(vy, vx);
-          double angle1 = baseAngle + Math.toRadians(30 + rand.nextInt(30));
-          double angle2 = baseAngle - Math.toRadians(30 + rand.nextInt(30));
 
-          double newSpeed1 = speed * (0.8 + rand.nextDouble() * 0.4);
-          double newSpeed2 = speed * (0.8 + rand.nextDouble() * 0.4);
-
-          engine.addGameObject(new Asteroid(x, y, size - 1,
-              newSpeed1 * Math.cos(angle1), newSpeed1 * Math.sin(angle1)));
-          engine.addGameObject(new Asteroid(x, y, size - 1,
-              newSpeed2 * Math.cos(angle2), newSpeed2 * Math.sin(angle2)));
-
-                 // Award points based on asteroid size with wave multiplier
-       int basePoints = size * 100;
-       int multipliedPoints = basePoints * engine.getWaveSystem().getScoreMultiplier();
-       engine.addScore(multipliedPoints);
+          for (int i = 0; i < splitCount; i++) {
+              double spread = (i - (splitCount - 1) / 2.0) * Math.toRadians(30 + rand.nextInt(30));
+              double fragmentAngle = baseAngle + spread;
+              double newSpeed = speed * (0.8 + rand.nextDouble() * 0.4);
+              engine.addGameObject(new Asteroid(x, y, size - 1,
+                  newSpeed * Math.cos(fragmentAngle), newSpeed * Math.sin(fragmentAngle), splitCount));
+          }
+       }
 
        // Notify wave system of asteroid destruction
        engine.getWaveSystem().asteroidDestroyed();
 
        // Track achievement progress
        LeaderboardSystem.asteroidDestroyed();
-       } else {
-          // Small asteroids worth 100 points with wave multiplier
-          int multipliedPoints = 100 * engine.getWaveSystem().getScoreMultiplier();
-          engine.addScore(multipliedPoints);
-
-          // Notify wave system of asteroid destruction
-          engine.getWaveSystem().asteroidDestroyed();
-
-          // Track achievement progress
-          LeaderboardSystem.asteroidDestroyed();
-       }
        // Mark this asteroid as destroyed.
        active = false;
+    }
+
+    private void awardPoints(GameEngine engine) {
+        int basePoints = ScoreCalculator.getAsteroidPoints(size);
+        int multipliedPoints = basePoints * engine.getWaveSystem().getScoreMultiplier();
+        engine.addScore(multipliedPoints);
+    }
+
+    public int getSplitCount() {
+        return splitCount;
     }
 
     private void triggerExplosionEffect(GameEngine engine) {

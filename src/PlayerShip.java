@@ -525,6 +525,13 @@ public class PlayerShip extends GameObject {
         // Reset lives and invulnerability
         lives = GameConfig.PlayerShip.INITIAL_LIVES;
         invulnerabilityTimer = 0;
+        // Clear power-ups and restore default ship stats
+        activePowerUps.clear();
+        hasShield = false;
+        maxSpeed = GameConfig.PlayerShip.MAX_SPEED;
+        rotationSpeed = GameConfig.PlayerShip.ROTATION_SPEED_RADIANS;
+        acceleration = GameConfig.PlayerShip.ACCELERATION;
+        fireRate = GameConfig.PlayerShip.FIRE_RATE;
         // Allow immediate shooting after reset
         lastFireTime = 1.0;
         // Clear engine trail

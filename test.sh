@@ -66,6 +66,24 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+java -ea -cp bin:lib/* CollisionHandlerTest
+if [ $? -ne 0 ]; then
+    echo "CollisionHandler tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* GameEngineWaveTest
+if [ $? -ne 0 ]; then
+    echo "GameEngineWave tests failed!"
+    exit 1
+fi
+
+java -ea -cp bin:lib/* PlayerShipResetTest
+if [ $? -ne 0 ]; then
+    echo "PlayerShipReset tests failed!"
+    exit 1
+fi
+
 java -ea -cp bin:lib/* BulletTest
 if [ $? -ne 0 ]; then
     echo "Bullet tests failed!"

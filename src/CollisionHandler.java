@@ -1,4 +1,5 @@
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Handles collision detection and resolution between game objects.
@@ -20,6 +21,10 @@ import java.util.List;
 public class CollisionHandler {
 
     private final GameEngine gameEngine;
+    /** Asteroids that have already triggered a shield-block this contact session. */
+    private final Set<Integer> shieldBlockedAsteroidIds = new HashSet<>();
+    /** Asteroids currently overlapping the shield this frame. */
+    private final Set<Integer> activeShieldOverlapIds = new HashSet<>();
 
     /**
      * Creates a new collision handler for the specified game engine.
@@ -28,6 +33,20 @@ public class CollisionHandler {
      */
     public CollisionHandler(GameEngine gameEngine) {
         this.gameEngine = gameEngine;
+    }
+
+    /**
+     * Begins a new collision frame; clears per-frame shield overlap tracking.
+     */
+    public void beginCollisionFrame() {
+        activeShieldOverlapIds.clear();
+    }
+
+    /**
+     * Ends a collision frame; removes debounce entries for asteroids no longer overlapping.
+     */
+    public void endCollisionFrame() {
+        shieldBlockedAsteroidIds.retainAll(activeShieldOverlapIds);
     }
 
     /**
@@ -66,6 +85,13 @@ public class CollisionHandler {
     public boolean isPlayerPowerUpCollision(GameObject a, GameObject b) {
         return (a instanceof PlayerShip && b instanceof PowerUp) ||
                (b instanceof PlayerShip && a instanceof PowerUp);
+    }
+
+    /**
+     * Checks collision between a laser beam and an asteroid using segment-circle intersection.
+     */
+    public boolean checkLaserAsteroidCollision(LaserBeam beam, Asteroid asteroid) {
+        return beam.intersectsCircle(asteroid.getX(), asteroid.getY(), asteroid.getRadius());
     }
 
     /**
@@ -119,6 +145,8 @@ public class CollisionHandler {
                 asteroid.hit(gameEngine);
             }
         }
+        // Beam is consumed after hitting
+        beam.setAlive(false);
         // Create larger impact effect with multiple spark directions
         double impactAngle = java.lang.Math.atan2(asteroid.getY() - beam.getY(),
                                       asteroid.getX() - beam.getX());
@@ -170,6 +198,7 @@ public class CollisionHandler {
      */
     private void handlePlayerAsteroidCollision(GameObject a, GameObject b) {
         PlayerShip ship = (a instanceof PlayerShip) ? (PlayerShip) a : (PlayerShip) b;
+        Asteroid asteroid = (a instanceof Asteroid) ? (Asteroid) a : (Asteroid) b;
 
         if (!ship.hasShield()) {
             double oldX = ship.getX();
@@ -177,7 +206,6 @@ public class CollisionHandler {
             ship.damage();
 
             // Notify wave system of damage via GameEngine
-            // (waveSystem is accessed through GameEngine's public method)
             gameEngine.notifyPlayerDamaged();
 
             if (ship.isAlive()) {
@@ -187,8 +215,13 @@ public class CollisionHandler {
                 gameEngine.createWarpEffect(ship.getX(), ship.getY());
             }
         } else {
-            // Shield blocked the hit
-            LeaderboardSystem.shieldBlocked();
+            // Shield blocked the hit — debounce: one block per asteroid contact
+            int asteroidId = System.identityHashCode(asteroid);
+            activeShieldOverlapIds.add(asteroidId);
+            if (!shieldBlockedAsteroidIds.contains(asteroidId)) {
+                shieldBlockedAsteroidIds.add(asteroidId);
+                LeaderboardSystem.shieldBlocked();
+            }
         }
     }
 
@@ -204,6 +237,7 @@ public class CollisionHandler {
 
         ship.addPowerUp(powerUp.getType());
         powerUp.setAlive(false);
+        gameEngine.notifyPowerUpCollected();
 
         // Show power-up message
         gameEngine.showPowerUpMessage(powerUp.getType());

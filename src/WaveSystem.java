@@ -39,6 +39,7 @@ public class WaveSystem {
     private WaveStats currentStats;
     private Queue<WaveStats> recentStats;
     private List<WaveStats> historicalStats;
+    private int pendingWaveBonus = 0;
 
     public WaveSystem() {
         recentStats = new LinkedList<>();
@@ -99,15 +100,12 @@ public class WaveSystem {
 
     private void completeWave() {
         waveInProgress = false;
+        pendingWaveBonus = getWaveCompletionBonus();
 
         // Record final stats
         long waveTime = currentStats.getWaveTime();
         LeaderboardSystem.waveCompleted(currentWave, currentStats.isPerfectWave(),
             bossWave, waveTime);
-
-        // Wave completion bonus calculation is available via getWaveCompletionBonus()
-        // if needed by the caller. Scoring is handled by ScoreCalculator and applied
-        // in GameEngine when processing wave completion.
 
         // Update stats history
         recentStats.offer(currentStats);
@@ -222,6 +220,15 @@ public class WaveSystem {
         int bonus = GameConfig.Scoring.WAVE_COMPLETION_BONUS * scoreMultiplier;
         if (isPerfectWave()) bonus *= 2;
         if (bossWave) bonus *= 3;
+        return bonus;
+    }
+
+    /**
+     * Returns and clears any pending wave completion bonus awaiting award by GameEngine.
+     */
+    public int consumePendingWaveBonus() {
+        int bonus = pendingWaveBonus;
+        pendingWaveBonus = 0;
         return bonus;
     }
 

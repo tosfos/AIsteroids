@@ -111,12 +111,13 @@ public class GamePanel extends JPanel implements KeyListener {
         updateAndDrawParticles(g2d);
 
         // Update and draw enhanced particle system
-        particleSystem.update(1.0/60.0);
+        double deltaTime = engine.getLastDeltaTime();
+        particleSystem.update(deltaTime);
         particleSystem.draw(g2d);
 
         // Update power-up message timer
         if (powerUpMessageTimer > 0) {
-            powerUpMessageTimer -= 1.0/60.0;
+            powerUpMessageTimer -= deltaTime;
             if (powerUpMessageTimer <= 0) {
                 powerUpMessage = "";
             }
@@ -610,22 +611,16 @@ public class GamePanel extends JPanel implements KeyListener {
         // Normal gameplay controls
         switch (key) {
             case KeyEvent.VK_LEFT:
-                if (!showingHelp) player.setTurnLeft(true);
+                if (!showingHelp) engine.queueInput(GameEngine.InputAction.TURN_LEFT_ON);
                 break;
             case KeyEvent.VK_RIGHT:
-                if (!showingHelp) player.setTurnRight(true);
+                if (!showingHelp) engine.queueInput(GameEngine.InputAction.TURN_RIGHT_ON);
                 break;
             case KeyEvent.VK_UP:
-                if (!showingHelp) player.setAccelerating(true);
+                if (!showingHelp) engine.queueInput(GameEngine.InputAction.ACCELERATE_ON);
                 break;
             case KeyEvent.VK_SPACE:
-                if (!showingHelp) {
-                    // Fire a bullet from the player's ship.
-                    List<Projectile> bullets = player.fireBullet();
-                    for (Projectile bullet : bullets) {
-                        engine.addGameObject(bullet);
-                    }
-                }
+                if (!showingHelp) engine.queueInput(GameEngine.InputAction.FIRE);
                 break;
             case KeyEvent.VK_H:
                 // Toggle help overlay
@@ -644,13 +639,13 @@ public class GamePanel extends JPanel implements KeyListener {
         int key = e.getKeyCode();
         switch (key) {
             case KeyEvent.VK_LEFT:
-                player.setTurnLeft(false);
+                engine.queueInput(GameEngine.InputAction.TURN_LEFT_OFF);
                 break;
             case KeyEvent.VK_RIGHT:
-                player.setTurnRight(false);
+                engine.queueInput(GameEngine.InputAction.TURN_RIGHT_OFF);
                 break;
             case KeyEvent.VK_UP:
-                player.setAccelerating(false);
+                engine.queueInput(GameEngine.InputAction.ACCELERATE_OFF);
                 break;
         }
     }

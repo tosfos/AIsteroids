@@ -5,11 +5,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GameEngine implements Runnable {
+    /** Input actions queued from the EDT and consumed on the game thread. */
+    public enum InputAction {
+        TURN_LEFT_ON, TURN_LEFT_OFF,
+        TURN_RIGHT_ON, TURN_RIGHT_OFF,
+        ACCELERATE_ON, ACCELERATE_OFF,
+        FIRE
+    }
+
     // List of active game objects (player, asteroids, bullets)
     private List<GameObject> gameObjects;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final ConcurrentLinkedQueue<InputAction> inputQueue = new ConcurrentLinkedQueue<>();
+    private volatile double lastDeltaTime = 1.0 / GameConfig.TARGET_FPS;
 
     public static final int WIDTH = GameConfig.SCREEN_WIDTH;
     public static final int HEIGHT = GameConfig.SCREEN_HEIGHT;
@@ -39,39 +50,37 @@ public class GameEngine implements Runnable {
     private final AtomicBoolean waveManagerRunning = new AtomicBoolean(false);
 
     public GameEngine() {
+        this(false);
+    }
+
+    /** Lightweight constructor for unit tests (skips audio and wave manager). */
+    GameEngine(boolean forTesting) {
         gameObjects = new ArrayList<>();
 
         try {
-            // Start ambient space sound
-            SoundManager.startAmbientSpace();
+            if (!forTesting) {
+                SoundManager.startAmbientSpace();
+                MusicSystem.startMusic();
+            }
 
-            // Start dynamic music
-            MusicSystem.startMusic();
-
-            // Initialize wave system
             waveSystem = new WaveSystem();
-
-            // Initialize collision handler
             collisionHandler = new CollisionHandler(this);
 
-            // Track game start
-            LeaderboardSystem.gameStarted();
+            if (!forTesting) {
+                LeaderboardSystem.gameStarted();
+            }
 
-            // Create player ship at center
             player = new PlayerShip(WIDTH / 2, HEIGHT / 2);
             addGameObject(player);
 
-            // Spawn initial wave of asteroids based on wave system
-            spawnWaveAsteroids();
-
-            // Start controlled wave manager thread
-            startWaveManager();
+            if (!forTesting) {
+                spawnWaveAsteroids();
+                startWaveManager();
+            }
         } catch (GameInitializationException e) {
-            // Re-throw game initialization exceptions as-is
             cleanup();
             throw e;
         } catch (RuntimeException e) {
-            // Wrap other runtime exceptions
             cleanup();
             throw new GameInitializationException("Failed to initialize game: " + e.getMessage(), e);
         } catch (Exception e) {
@@ -80,6 +89,11 @@ public class GameEngine implements Runnable {
             cleanup();
             throw new GameInitializationException("Failed to initialize game", e);
         }
+    }
+
+    /** Creates a minimal engine instance for collision/input unit tests. */
+    public static GameEngine createForTesting() {
+        return new GameEngine(true);
     }
 
     private void startWaveManager() {
@@ -208,6 +222,7 @@ public class GameEngine implements Runnable {
     }
 
     public void update(double deltaTime) {
+        lastDeltaTime = deltaTime;
         // Don't update game state if game is over
         if (gameOver) {
             return;
@@ -218,11 +233,54 @@ public class GameEngine implements Runnable {
 
         // Combine synchronized blocks to reduce lock contention
         synchronized(lock) {
+            processInput();
             // No need for copy since we're already synchronized
             updateGameObjects(deltaTime);
             processCollisions();
             removeDeadObjects();
             wrapObjectsAroundScreen();
+            awardPendingWaveBonus();
+        }
+    }
+
+    private void processInput() {
+        InputAction action;
+        while ((action = inputQueue.poll()) != null) {
+            switch (action) {
+                case TURN_LEFT_ON: player.setTurnLeft(true); break;
+                case TURN_LEFT_OFF: player.setTurnLeft(false); break;
+                case TURN_RIGHT_ON: player.setTurnRight(true); break;
+                case TURN_RIGHT_OFF: player.setTurnRight(false); break;
+                case ACCELERATE_ON: player.setAccelerating(true); break;
+                case ACCELERATE_OFF: player.setAccelerating(false); break;
+                case FIRE:
+                    List<Projectile> bullets = player.fireBullet();
+                    if (!bullets.isEmpty()) {
+                        waveSystem.recordBulletShot();
+                    }
+                    for (Projectile bullet : bullets) {
+                        addGameObject(bullet);
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Queues a player input action to be processed on the game thread.
+     */
+    public void queueInput(InputAction action) {
+        inputQueue.offer(action);
+    }
+
+    public double getLastDeltaTime() {
+        return lastDeltaTime;
+    }
+
+    private void awardPendingWaveBonus() {
+        int bonus = waveSystem.consumePendingWaveBonus();
+        if (bonus > 0) {
+            addScore(bonus);
         }
     }
 
@@ -234,6 +292,7 @@ public class GameEngine implements Runnable {
     }
 
     private void processCollisions() {
+        collisionHandler.beginCollisionFrame();
         // Optimized collision detection with early exits
         int size = gameObjects.size();
         for (int i = 0; i < size; i++) {
@@ -244,17 +303,29 @@ public class GameEngine implements Runnable {
                 GameObject b = gameObjects.get(j);
                 if (!b.isAlive()) continue; // Early exit for dead objects
 
-                // Quick distance check before expensive bounds intersection
-                double dx = a.getX() - b.getX();
-                double dy = a.getY() - b.getY();
-                double distance = dx * dx + dy * dy; // Avoid sqrt for performance
-                double maxDistance = a.getRadius() + b.getRadius();
-
-                if (distance <= maxDistance * maxDistance) {
+                if (checkObjectsCollide(a, b)) {
                     collisionHandler.handleCollision(a, b);
                 }
             }
         }
+        collisionHandler.endCollisionFrame();
+    }
+
+    private boolean checkObjectsCollide(GameObject a, GameObject b) {
+        // Laser beam uses segment-circle intersection along full beam path
+        if (a instanceof LaserBeam && b instanceof Asteroid) {
+            return collisionHandler.checkLaserAsteroidCollision((LaserBeam) a, (Asteroid) b);
+        }
+        if (b instanceof LaserBeam && a instanceof Asteroid) {
+            return collisionHandler.checkLaserAsteroidCollision((LaserBeam) b, (Asteroid) a);
+        }
+
+        // Standard circular collision for all other pairs
+        double dx = a.getX() - b.getX();
+        double dy = a.getY() - b.getY();
+        double distance = dx * dx + dy * dy; // Avoid sqrt for performance
+        double maxDistance = a.getRadius() + b.getRadius();
+        return distance <= maxDistance * maxDistance;
     }
 
     private void removeDeadObjects() {
@@ -276,6 +347,15 @@ public class GameEngine implements Runnable {
     void notifyPlayerDamaged() {
         if (waveSystem != null) {
             waveSystem.playerDamaged();
+        }
+    }
+
+    /**
+     * Notifies the wave system that a power-up was collected.
+     */
+    void notifyPowerUpCollected() {
+        if (waveSystem != null) {
+            waveSystem.recordPowerUpCollected();
         }
     }
 
@@ -433,7 +513,7 @@ public class GameEngine implements Runnable {
     }
 
     private void checkAndSpawnAsteroids() {
-        // Count current asteroids and handle wave completion atomically
+        // Spawn asteroids when screen is clear but wave expects more
         synchronized(lock) {
             int currentAsteroids = 0;
             for (GameObject obj : gameObjects) {
@@ -442,19 +522,15 @@ public class GameEngine implements Runnable {
                 }
             }
 
-            // If no asteroids remain and wave is in progress, complete the wave
-            if (currentAsteroids == 0 && waveSystem.isWaveInProgress()) {
-                waveSystem.asteroidDestroyed(); // This will trigger wave completion
+            if (currentAsteroids == 0 && waveSystem.getAsteroidsRemaining() > 0) {
                 try {
-                    spawnWaveAsteroids(); // Spawn next wave
+                    spawnWaveAsteroids();
                 } catch (IllegalArgumentException | IllegalStateException e) {
                     System.err.println("Error spawning wave asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-                    // Ensure wave system stays in sync even if spawn fails
                     waveSystem.reset();
                 } catch (Exception e) {
                     System.err.println("Unexpected error spawning wave asteroids: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                     e.printStackTrace();
-                    // Ensure wave system stays in sync even if spawn fails
                     waveSystem.reset();
                 }
             }
@@ -481,7 +557,7 @@ public class GameEngine implements Runnable {
         double vx = spawnInfo.speed * Math.cos(angle);
         double vy = spawnInfo.speed * Math.sin(angle);
 
-        return new Asteroid(x, y, spawnInfo.size, vx, vy);
+        return new Asteroid(x, y, spawnInfo.size, vx, vy, spawnInfo.splitCount);
     }
 
     public WaveSystem getWaveSystem() {
